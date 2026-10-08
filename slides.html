@@ -111,6 +111,14 @@
   .uses .yes h3 { color: var(--ok); }  .uses .yes li::before { content: "✓"; color: var(--ok); }
   .uses .no h3 { color: var(--no); }   .uses .no li::before { content: "✕"; color: var(--no); }
 
+  /* o que isso quer dizer */
+  .meaning { flex: 1; display: grid; grid-template-columns: 1fr auto 1fr; align-content: center; column-gap: 40px; row-gap: 30px; }
+  .meaning .res { font-size: 42px; color: var(--muted); background: var(--soft); border-radius: 22px; padding: 26px 34px; display: flex; align-items: center; }
+  .meaning .arr { font-size: 56px; font-weight: 800; color: var(--aws); display: flex; align-items: center; }
+  .meaning .mean { font-size: 46px; font-weight: 800; color: var(--accent); display: flex; align-items: center; }
+  .meaning + .formula { font-size: 40px; }
+  .meaning + .formula b { color: var(--accent); }
+
   /* vídeo */
   .video-wrap { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
   .video-wrap video { width: 100%; height: 100%; object-fit: contain; border-radius: 18px; background: #000; }
@@ -357,8 +365,20 @@
   </div>
 </section>
 
-<!-- 17 · REFERÊNCIAS -->
+<!-- 17 · O QUE ISSO QUER DIZER -->
 <section class="slide" data-n="17">
+  <h2>O que isso quer dizer?</h2>
+  <div class="meaning">
+    <div class="res">Tabela criada sem servidor</div><div class="arr">→</div><div class="mean">A AWS cuida da infraestrutura</div>
+    <div class="res">Paralelo muitas vezes mais rápido</div><div class="arr">→</div><div class="mean">Partições em paralelo</div>
+    <div class="res">Milissegundos até no p99</div><div class="arr">→</div><div class="mean">Latência previsível</div>
+    <div class="res">Query leu 100 · Scan leu 2.000</div><div class="arr">→</div><div class="mean">A chave é tudo</div>
+  </div>
+  <p class="formula">Em resumo: <b>escala horizontal na prática</b></p>
+</section>
+
+<!-- 18 · REFERÊNCIAS -->
+<section class="slide" data-n="18">
   <h2 style="margin-bottom:40px">Referências</h2>
   <ol class="refs">
     <li>AMAZON WEB SERVICES. <b>Amazon DynamoDB</b>. <a href="https://aws.amazon.com/dynamodb/">aws.amazon.com/dynamodb</a></li>
@@ -375,8 +395,8 @@
   </ol>
 </section>
 
-<!-- 18 · OBRIGADO -->
-<section class="slide thanks no-deco" data-n="18">
+<!-- 19 · OBRIGADO -->
+<section class="slide thanks no-deco" data-n="19">
   <h1>Obrigado!</h1>
   <p class="q">Perguntas?</p>
   <p class="who">Vítor Raimundo Fernandes Gabínio</p>

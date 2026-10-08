@@ -8,7 +8,7 @@ Autor: **Vítor Raimundo Fernandes Gabínio**
 
 | Arquivo | O que é |
 | --- | --- |
-| [`slides.html`](slides.html) | Slides (18), em HTML puro. Abra no navegador. |
+| [`slides.html`](slides.html) | Slides (19), em HTML puro. Abra no navegador. |
 | [`roteiro.html`](roteiro.html) | Roteiro da fala, slide a slide, com tempos e perguntas prováveis. |
 | [`guia_demonstracao.html`](guia_demonstracao.html) | Passo a passo da demonstração na AWS (console + CloudShell). |
 | [`demo/demo_dynamodb.py`](demo/demo_dynamodb.py) | Script Python (boto3) usado na demonstração de desempenho. |

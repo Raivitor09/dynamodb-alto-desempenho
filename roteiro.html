@@ -6,269 +6,231 @@
 <title>Roteiro DynamoDB</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-  :root { --ink:#14181f; --muted:#5d6878; --line:#e2e7ef; --soft:#f4f7fb; --accent:#1f5fbf; --aws:#ff9900; --say:#fffaf0; }
+  :root { --ink:#14181f; --muted:#5d6878; --line:#e2e7ef; --soft:#f4f7fb; --accent:#1f5fbf; --aws:#ff9900; }
   * { box-sizing: border-box; }
-  body { margin:0; background:#fff; color:var(--ink); font-family:"Inter","Segoe UI",system-ui,sans-serif; font-size:18px; line-height:1.65; }
-  main { max-width: 860px; margin: 0 auto; padding: 48px 16px 120px; }
-  h1 { font-size: 40px; line-height:1.15; margin: 0 0 8px; letter-spacing:-.5px; }
-  h2 { font-size: 26px; margin: 56px 0 6px; padding-top: 20px; border-top: 1px solid var(--line); }
-  h3 { font-size: 19px; margin: 28px 0 8px; }
-  .meta { color: var(--muted); margin-bottom: 28px; }
-  .time { display:inline-block; font-size:14px; font-weight:600; color:#8a5a00; background:#fff1d6; border-radius:999px; padding:2px 12px; margin-left:8px; vertical-align:middle; }
-  .on-screen { color: var(--muted); font-size: 15px; margin: 0 0 12px; }
-  .say { background: var(--say); border-left: 4px solid var(--aws); border-radius: 0 10px 10px 0; padding: 14px 20px; margin: 10px 0; }
-  .say p { margin: 0 0 10px; } .say p:last-child { margin: 0; }
-  .tip { background: var(--soft); border-radius: 10px; padding: 12px 18px; font-size: 16px; color: #33404f; margin: 10px 0; }
-  .tip b { color: var(--accent); }
-  table { width:100%; border-collapse: collapse; font-size: 16px; margin: 16px 0; }
-  th, td { text-align:left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { color: var(--muted); font-weight: 600; }
-  td.r, th.r { text-align: right; white-space: nowrap; }
-  tr.total td { font-weight: 800; border-top: 2px solid var(--ink); }
-  code { font-family: Consolas, monospace; background: var(--soft); padding: 1px 6px; border-radius: 5px; font-size: .92em; }
-  nav { columns: 2; font-size: 16px; margin: 12px 0 0; }
-  nav a { color: var(--accent); text-decoration: none; display:block; }
-  .qa dt { font-weight: 700; margin-top: 18px; }
-  .qa dd { margin: 4px 0 0 0; color: #33404f; }
-  @media (max-width: 640px) { nav { columns: 1; } h1 { font-size: 30px; } }
-  @media print { h2 { break-before: auto; } .say, .tip { break-inside: avoid; } }
+  body { margin:0; background:var(--soft); color:var(--ink); font-family:"Inter","Segoe UI",system-ui,sans-serif; font-size:19px; line-height:1.65; }
+  main { max-width: 980px; margin: 0 auto; padding: 40px 16px 100px; }
+  header h1 { font-size: 34px; line-height:1.2; margin: 0 0 6px; }
+  header p { color: var(--muted); margin: 0 0 28px; font-size: 18px; }
+
+  .card { display: grid; grid-template-columns: 300px 1fr; gap: 26px; align-items: center; background:#fff; border:1px solid var(--line); border-radius:16px; padding: 20px 24px; margin-bottom: 14px; }
+  .thumb { display:block; width:300px; height:169px; overflow:hidden; border:1px solid var(--line); border-radius:10px; }
+  .thumb iframe { width:1920px; height:1080px; border:0; transform:scale(.15625); transform-origin:0 0; pointer-events:none; }
+  .card h2 { font-size: 21px; margin: 0 0 8px; display:flex; align-items:baseline; gap:10px; }
+  .card h2 .n { color: var(--accent); }
+  .card h2 .t { margin-left:auto; font-size:15px; font-weight:600; color:var(--muted); }
+  .card p { margin: 0; }
+
+  .card .video { grid-column: 1 / -1; border-top: 1px solid var(--line); padding-top: 14px; }
+  .card .video p { margin: 0 0 12px; }
+  .card .video .when { display:block; font-size: 14px; font-weight: 700; color: var(--accent); }
+  .link { position: relative; margin: -4px 0 -4px 170px; padding: 10px 0 10px 30px; color: var(--accent); font-style: italic; font-weight: 600; font-size: 17px; }
+  .link::before { content: ""; position: absolute; left: 8px; top: 0; bottom: 0; border-left: 2px dashed #b9c9e6; }
+  .link::after { content: "↓"; position: absolute; left: 1px; bottom: -6px; font-style: normal; color: var(--aws); font-size: 18px; }
+  .blank { display:inline-block; min-width:48px; border-bottom:2px solid var(--aws); }
+  details { background:#fff; border:1px solid var(--line); border-radius:16px; padding: 18px 24px; margin-top: 26px; }
+  summary { cursor:pointer; font-weight:700; }
+  details p { margin: 12px 0 0; }
+
+  @media (max-width: 760px) { .card { grid-template-columns: 1fr; } .thumb { width:100%; height:auto; aspect-ratio:16/9; } .thumb iframe { transform:scale(.17); } }
+  @media print { body { background:#fff; } .thumb { display:none; } .card { grid-template-columns: 1fr; break-inside: avoid; } }
 </style>
 </head>
 <body>
 <main>
-  <h1>Roteiro da apresentação — Amazon DynamoDB</h1>
-  <p class="meta">Vítor Raimundo Fernandes Gabínio · Computação de Alto Desempenho · UEPB<br>
-  Duração-alvo: <b>~20 minutos</b> (≈16 min de fala + 3,5 min de vídeo + perguntas)</p>
+  <header>
+    <h1>Roteiro — Amazon DynamoDB</h1>
+    <p>Vítor Raimundo Fernandes Gabínio · Computação de Alto Desempenho · UEPB<br>
+    Leia em voz alta algumas vezes e depois fale com as suas palavras. A frase azul entre os cartões é a ponte: diga e passe para o próximo slide. Clique na miniatura para abrir o slide.</p>
+  </header>
 
-  <div class="tip"><b>Como usar este roteiro:</b> o texto nos quadros amarelos é uma sugestão do que falar — não precisa decorar palavra por palavra. Leia algumas vezes em voz alta, cronometre e ajuste para o seu jeito de falar. O texto está num registro mais formal: fale com calma, faça pausas curtas depois dos trechos em <b>negrito</b> e olhe para a turma ao dizer os números. Nos slides use <code>→</code> / <code>←</code> (ou o passador de slides) e <code>F</code> para tela cheia.</div>
+  <section class="card">
+    <a class="thumb" href="slides.html#1" target="_blank"><iframe src="slides.html#1" loading="lazy" tabindex="-1" title="Slide 1"></iframe></a>
+    <div>
+      <h2><span class="n">1</span> Capa <span class="t">30 s</span></h2>
+      <p>“Boa noite. Meu nome é Vítor e vou apresentar o Amazon DynamoDB, o banco de dados da AWS feito para aguentar muito acesso ao mesmo tempo sem ficar lento.”</p>
+    </div>
+  </section>
+  <div class="link">“Quero começar com uma pergunta.”</div>
 
-  <h3>Tempo por slide</h3>
-  <table>
-    <tr><th>#</th><th>Slide</th><th class="r">Tempo</th><th class="r">Acumulado</th></tr>
-    <tr><td>1</td><td>Capa</td><td class="r">0:40</td><td class="r">0:40</td></tr>
-    <tr><td>2</td><td>A pergunta</td><td class="r">1:00</td><td class="r">1:40</td></tr>
-    <tr><td>3</td><td>De onde veio</td><td class="r">1:15</td><td class="r">2:55</td></tr>
-    <tr><td>4</td><td>O que é</td><td class="r">1:00</td><td class="r">3:55</td></tr>
-    <tr><td>5</td><td>Tabela · Item · Atributo</td><td class="r">1:00</td><td class="r">4:55</td></tr>
-    <tr><td>6</td><td>A chave é tudo</td><td class="r">1:15</td><td class="r">6:10</td></tr>
-    <tr><td>7</td><td>Particionamento por hash</td><td class="r">1:30</td><td class="r">7:40</td></tr>
-    <tr><td>8</td><td>Por dentro (arquitetura)</td><td class="r">1:20</td><td class="r">9:00</td></tr>
-    <tr><td>9</td><td>Cada partição tem 3 cópias</td><td class="r">1:30</td><td class="r">10:30</td></tr>
-    <tr><td>10</td><td>Leitura: você escolhe</td><td class="r">0:50</td><td class="r">11:20</td></tr>
-    <tr><td>11</td><td>Capacidade</td><td class="r">1:00</td><td class="r">12:20</td></tr>
-    <tr><td>12</td><td>DAX</td><td class="r">0:45</td><td class="r">13:05</td></tr>
-    <tr><td>13</td><td>Global Tables</td><td class="r">0:45</td><td class="r">13:50</td></tr>
-    <tr><td>14</td><td>Prime Day 2025</td><td class="r">1:00</td><td class="r">14:50</td></tr>
-    <tr><td>15</td><td>Quando usar?</td><td class="r">0:50</td><td class="r">15:40</td></tr>
-    <tr><td>16</td><td>Demonstração (vídeo)</td><td class="r">3:30</td><td class="r">19:10</td></tr>
-    <tr><td>17</td><td>Referências</td><td class="r">0:20</td><td class="r">19:30</td></tr>
-    <tr><td>18</td><td>Obrigado / perguntas</td><td class="r">0:20</td><td class="r">19:50</td></tr>
-    <tr class="total"><td></td><td>Total</td><td class="r"></td><td class="r">≈ 20:00</td></tr>
-  </table>
-  <div class="tip"><b>Se o tempo apertar:</b> encurte os slides 12 e 13 (DAX e Global Tables) para uma frase cada. <b>Se sobrar tempo:</b> aprofunde o slide 7 (hot partitions) e o slide 9 (o que acontece quando o líder cai).</div>
+  <section class="card">
+    <a class="thumb" href="slides.html#2" target="_blank"><iframe src="slides.html#2" loading="lazy" tabindex="-1" title="Slide 2"></iframe></a>
+    <div>
+      <h2><span class="n">2</span> A pergunta <span class="t">50 s</span></h2>
+      <p>“No Prime Day da Amazon, cada clique no site vira uma leitura ou escrita no banco — são milhões por segundo. Um computador sozinho não dá conta, por mais potente que seja. A saída é dividir o trabalho entre muitos computadores trabalhando ao mesmo tempo. Ao longo da apresentação, vou mostrar como o DynamoDB faz isso.”</p>
+    </div>
+  </section>
+  <div class="link">“Mas antes: de onde ele veio?”</div>
 
-  <nav>
-    <a href="#s1">1 · Capa</a><a href="#s2">2 · A pergunta</a><a href="#s3">3 · De onde veio</a><a href="#s4">4 · O que é</a>
-    <a href="#s5">5 · Modelo de dados</a><a href="#s6">6 · Chave primária</a><a href="#s7">7 · Particionamento</a><a href="#s8">8 · Arquitetura</a>
-    <a href="#s9">9 · Replicação</a><a href="#s10">10 · Consistência</a><a href="#s11">11 · Capacidade</a><a href="#s12">12 · DAX</a>
-    <a href="#s13">13 · Global Tables</a><a href="#s14">14 · Prime Day</a><a href="#s15">15 · Quando usar</a><a href="#s16">16 · Demonstração</a>
-    <a href="#s17">17 · Referências</a><a href="#s18">18 · Obrigado</a><a href="#qa">Perguntas prováveis</a>
-  </nav>
+  <section class="card">
+    <a class="thumb" href="slides.html#3" target="_blank"><iframe src="slides.html#3" loading="lazy" tabindex="-1" title="Slide 3"></iframe></a>
+    <div>
+      <h2><span class="n">3</span> De onde veio <span class="t">45 s</span></h2>
+      <p>“Em 2007, a Amazon publicou o Dynamo, um banco que ela usava internamente para nunca deixar o site fora do ar. Ele funcionava bem, mas era difícil de manter. Em 2012, a AWS transformou essa ideia num serviço pronto, em que ela mesma cuida de tudo: o DynamoDB.”</p>
+    </div>
+  </section>
+  <div class="link">“E o que ele é, exatamente?”</div>
 
-  <!-- 1 -->
-  <h2 id="s1">1 · Capa <span class="time">0:40</span></h2>
-  <p class="on-screen">Na tela: logo da UEPB, título, seu nome.</p>
-  <div class="say">
-    <p>“Boa noite a todos. Meu nome é Vítor Gabínio e, nos próximos minutos, proponho examinarmos o <b>Amazon DynamoDB</b>, o serviço de banco de dados NoSQL da Amazon Web Services.</p>
-    <p>Mais do que apresentar um produto, pretendo tratá-lo como um <b>estudo de caso em computação de alto desempenho</b>: um sistema distribuído concebido para sustentar milhões de operações por segundo sem abrir mão de uma latência baixa e, sobretudo, previsível. Ao final, apresento uma demonstração do serviço em funcionamento na própria AWS.”</p>
-  </div>
+  <section class="card">
+    <a class="thumb" href="slides.html#4" target="_blank"><iframe src="slides.html#4" loading="lazy" tabindex="-1" title="Slide 4"></iframe></a>
+    <div>
+      <h2><span class="n">4</span> O que é <span class="t">40 s</span></h2>
+      <p>“É um banco NoSQL: em vez de tabelas relacionadas entre si, ele guarda dados que você busca por uma chave, como num dicionário. É serverless, ou seja, você não instala nem configura servidor nenhum. E responde em poucos milissegundos, seja com pouco ou com muitíssimo dado.”</p>
+    </div>
+  </section>
+  <div class="link">“Para entender como, vamos ver como ele guarda os dados.”</div>
 
-  <!-- 2 -->
-  <h2 id="s2">2 · A pergunta <span class="time">1:00</span></h2>
-  <p class="on-screen">Na tela: “Milhões de requisições por segundo. Respostas em milissegundos. Como?”</p>
-  <div class="say">
-    <p>“Começo com uma provocação. Consideremos um evento como o Prime Day da Amazon: cada interação do usuário — inserir um item no carrinho, consultar o estoque, concluir um pedido — desdobra-se em leituras e escritas no banco de dados. Estamos falando de <b>milhões dessas operações a cada segundo</b>.</p>
-    <p>A abordagem tradicional, a <b>escala vertical</b>, consiste em adquirir uma máquina cada vez mais robusta. Ela, contudo, esbarra num limite físico e econômico: a partir de certo ponto, a máquina maior simplesmente não existe.</p>
-    <p>O DynamoDB adota o caminho oposto, a <b>escala horizontal</b>: fragmentar os dados e distribuir a carga entre um grande número de servidores que operam em paralelo. É precisamente esse princípio — central na nossa disciplina — que pretendo dissecar ao longo da apresentação.”</p>
-  </div>
+  <section class="card">
+    <a class="thumb" href="slides.html#5" target="_blank"><iframe src="slides.html#5" loading="lazy" tabindex="-1" title="Slide 5"></iframe></a>
+    <div>
+      <h2><span class="n">5</span> Tabela · Item · Atributo <span class="t">40 s</span></h2>
+      <p>“Os dados ficam em tabelas. Cada item é como uma linha, e cada atributo é como uma coluna. A diferença é que os itens não precisam ter os mesmos campos: aqui, um tem telefone, outro tem endereço. Só uma coisa é obrigatória em todos: a chave.”</p>
+    </div>
+  </section>
+  <div class="link">“E é na chave que está o segredo.”</div>
 
-  <!-- 3 -->
-  <h2 id="s3">3 · De onde veio <span class="time">1:15</span></h2>
-  <p class="on-screen">Na tela: linha do tempo 2007 → 2021 (figura do artigo da AWS na USENIX ATC 2022).</p>
-  <div class="say">
-    <p>“A trajetória do DynamoDB remonta a <b>2007</b>, quando engenheiros da Amazon publicaram o artigo <b>Dynamo</b>, descrevendo um armazenamento chave-valor interno cuja prioridade absoluta era a disponibilidade — o carrinho de compras, por exemplo, jamais poderia ficar indisponível.</p>
-    <p>O Dynamo cumpria tecnicamente o seu propósito, mas impunha um custo operacional elevado: cada equipe precisava implantar, ajustar e manter o seu próprio cluster.</p>
-    <p>Em <b>2012</b>, a AWS lança o <b>DynamoDB</b> como serviço público e integralmente gerenciado, sintetizando as lições do Dynamo com as de outro sistema da casa, o SimpleDB. A partir daí, como mostra a linha do tempo, o serviço incorporou índices secundários, <i>streams</i>, tabelas globais, transações, o modo sob demanda e o PartiQL, uma linguagem de consulta compatível com SQL.</p>
-    <p>Esta figura, aliás, provém de um artigo publicado em 2022 pelos próprios engenheiros da AWS na conferência USENIX — uma das fontes centrais deste trabalho.”</p>
-  </div>
+  <section class="card">
+    <a class="thumb" href="slides.html#6" target="_blank"><iframe src="slides.html#6" loading="lazy" tabindex="-1" title="Slide 6"></iframe></a>
+    <div>
+      <h2><span class="n">6</span> A chave é tudo <span class="t">50 s</span></h2>
+      <p>“A chave tem duas partes. A partition key diz em qual “gaveta” o item vai ser guardado. A sort key, que é opcional, diz a ordem dos itens dentro da gaveta — por exemplo, as leituras de um sensor organizadas por horário.”</p>
+    </div>
+  </section>
+  <div class="link">“Mas como o DynamoDB escolhe a gaveta?”</div>
 
-  <!-- 4 -->
-  <h2 id="s4">4 · O que é <span class="time">1:00</span></h2>
-  <p class="on-screen">Na tela: NoSQL · Serverless · Escala horizontal · Latência previsível.</p>
-  <div class="say">
-    <p>“Em síntese, o DynamoDB pode ser caracterizado por quatro atributos.</p>
-    <p>É <b>NoSQL</b>: abdica do modelo relacional e das junções em favor de um modelo chave-valor e de documentos, semelhantes a JSON.</p>
-    <p>É <b>serverless</b>: não há servidores a provisionar, atualizar ou configurar; a interação se dá inteiramente por meio de uma API.</p>
-    <p>Oferece <b>escalabilidade horizontal</b>: a mesma tabela comporta tanto uma requisição diária quanto milhões por segundo.</p>
-    <p>E, talvez o ponto mais relevante sob a ótica do alto desempenho, garante <b>latência previsível</b>. Não se trata apenas de ser rápido em média, mas de manter esse comportamento estável quer a tabela ocupe alguns megabytes, quer centenas de terabytes.”</p>
-  </div>
+  <section class="card">
+    <a class="thumb" href="slides.html#7" target="_blank"><iframe src="slides.html#7" loading="lazy" tabindex="-1" title="Slide 7"></iframe></a>
+    <div>
+      <h2><span class="n">7</span> Particionamento por hash <span class="t">1 min 10 s</span></h2>
+      <p>“Ele passa a chave por uma fórmula, o hash, que espalha os itens por igual entre as gavetas — aqui, “Dog” foi parar na terceira. Essas gavetas se chamam partições, e cada uma fica num servidor diferente. Por isso milhares de pedidos ao mesmo tempo são atendidos em paralelo: essa é a primeira parte da resposta ao “como?”. O cuidado é não usar uma chave que jogue tudo numa gaveta só.”</p>
+    </div>
+  </section>
+  <div class="link">“Agora, vamos seguir um pedido lá dentro.”</div>
 
-  <!-- 5 -->
-  <h2 id="s5">5 · Tabela · Item · Atributo <span class="time">1:00</span></h2>
-  <p class="on-screen">Na tela: tabela People da documentação da AWS.</p>
-  <div class="say">
-    <p>“O modelo de dados assenta-se sobre três conceitos. A <b>tabela</b> constitui a coleção de dados; o <b>item</b> corresponde, grosso modo, a uma linha; e os <b>atributos</b> fazem as vezes de colunas.</p>
-    <p>A diferença fundamental em relação ao modelo relacional é a <b>ausência de esquema rígido</b>. Observem o exemplo: o registro 101 possui telefone; o 102, endereço; o 103, uma cor favorita. Cada item define livremente os seus atributos, admitindo inclusive estruturas aninhadas, como o endereço.</p>
-    <p>O único elemento obrigatório é a <b>chave primária</b> — e é justamente ela, como veremos a seguir, que determina o desempenho de todo o sistema.”</p>
-  </div>
-  <div class="tip"><b>Detalhe extra, se perguntarem:</b> um item pode ter no máximo 400 KB, e atributos podem ser aninhados até 32 níveis.</div>
+  <section class="card">
+    <a class="thumb" href="slides.html#8" target="_blank"><iframe src="slides.html#8" loading="lazy" tabindex="-1" title="Slide 8"></iframe></a>
+    <div>
+      <h2><span class="n">8</span> Por dentro <span class="t">45 s</span></h2>
+      <p>“O pedido passa primeiro pelo roteador, que confere quem você é e descobre em qual servidor está a gaveta certa. Depois vai direto para esse servidor. Esses servidores ficam em prédios diferentes, as zonas de disponibilidade.”</p>
+    </div>
+  </section>
+  <div class="link">“E por que prédios diferentes? Porque cada gaveta tem cópias.”</div>
 
-  <!-- 6 -->
-  <h2 id="s6">6 · A chave é tudo <span class="time">1:15</span></h2>
-  <p class="on-screen">Na tela: partition key × sort key.</p>
-  <div class="say">
-    <p>“A chave primária pode ser composta por dois elementos complementares.</p>
-    <p>A <b>partition key</b> responde à pergunta: <b>onde o item reside?</b> O seu valor é submetido a uma função de <i>hash</i>, cujo resultado determina a partição — isto é, o segmento físico do sistema — em que o item será armazenado.</p>
-    <p>A <b>sort key</b>, opcional, responde à pergunta: <b>em que ordem?</b> Ela organiza os itens dentro de uma mesma partição e viabiliza consultas por intervalo, como “todas as leituras do sensor 7 entre as 10 e as 11 horas”.</p>
-    <p>No exemplo da documentação, a chave combina <i>artista</i> e <i>música</i>; na demonstração, utilizarei <i>identificador do sensor</i> e <i>carimbo de tempo</i>.</p>
-    <p>Daí decorre um princípio de modelagem característico do DynamoDB: projeta-se a tabela a partir dos <b>padrões de acesso</b> da aplicação — das perguntas que ela fará —, e não a partir das entidades, como faríamos num banco relacional.”</p>
-  </div>
+  <section class="card">
+    <a class="thumb" href="slides.html#9" target="_blank"><iframe src="slides.html#9" loading="lazy" tabindex="-1" title="Slide 9"></iframe></a>
+    <div>
+      <h2><span class="n">9</span> Cada partição tem 3 cópias <span class="t">50 s</span></h2>
+      <p>“Cada gaveta existe em três cópias, uma em cada prédio. Uma delas é a líder e recebe as gravações. Quando você grava algo, a líder repassa para as outras, e a gravação só é confirmada quando pelo menos duas das três salvaram. Assim, mesmo se um prédio inteiro cair, nada se perde.”</p>
+    </div>
+  </section>
+  <div class="link">“Essas cópias também mudam a forma de ler.”</div>
 
-  <!-- 7 -->
-  <h2 id="s7">7 · Particionamento por hash <span class="time">1:30</span></h2>
-  <p class="on-screen">Na tela: diagrama da AWS — item “Dog” → f(x) → partição.</p>
-  <div class="say">
-    <p>“Chegamos ao cerne do desempenho. Um item com a chave <i>Dog</i> é submetido à função de <i>hash</i>, e o valor resultante aponta, de forma determinística, para uma partição específica — aqui, a da direita.</p>
-    <p>Como a função de <i>hash</i> dispersa as chaves de maneira aproximadamente uniforme, os dados distribuem-se por um grande número de partições, cada qual hospedada em SSD, em servidores distintos. Quando milhares de requisições chegam simultaneamente, elas são atendidas por máquinas diferentes, de forma concorrente. Trata-se, essencialmente, de <b>paralelismo de dados</b> — análogo à decomposição de um vetor entre múltiplos processadores.</p>
-    <p>À medida que a tabela cresce, seja em volume, seja em tráfego, o DynamoDB <b>subdivide partições automaticamente</b>, sem qualquer interrupção do serviço.</p>
-    <p>Há, porém, uma ressalva importante: a chave deve apresentar <b>alta cardinalidade</b>. Se o tráfego se concentra em poucos valores, forma-se uma <b>partição quente</b> — o equivalente, em sistemas distribuídos, ao desbalanceamento de carga que estudamos em programação paralela.”</p>
-  </div>
-  <div class="tip"><b>Número útil:</b> segundo a documentação da AWS, cada partição suporta até 3.000 unidades de leitura e 1.000 unidades de escrita por segundo. É por isso que distribuir a carga entre partições é decisivo.</div>
+  <section class="card">
+    <a class="thumb" href="slides.html#10" target="_blank"><iframe src="slides.html#10" loading="lazy" tabindex="-1" title="Slide 10"></iframe></a>
+    <div>
+      <h2><span class="n">10</span> Leitura: você escolhe <span class="t">40 s</span></h2>
+      <p>“Na hora de ler, você escolhe de qual cópia. Na leitura eventual, qualquer cópia responde: é mais barata, mas pode estar um instante atrasada. Na leitura forte, só a líder responde, então o dado é sempre o mais novo.”</p>
+    </div>
+  </section>
+  <div class="link">“E falando em custo: como se paga por tudo isso?”</div>
 
-  <!-- 8 -->
-  <h2 id="s8">8 · Por dentro <span class="time">1:20</span></h2>
-  <p class="on-screen">Na tela: arquitetura do artigo USENIX 2022.</p>
-  <div class="say">
-    <p>“Este diagrama, extraído do artigo dos engenheiros da AWS, ilustra o percurso de uma requisição.</p>
-    <p>Ao atravessar a rede, a requisição chega ao <b>roteador de requisições</b>, que desempenha três funções: autentica o solicitante junto ao <b>sistema de autenticação</b>; consulta o <b>sistema de metadados de partição</b> para descobrir em qual servidor reside a partição correspondente à chave; e recorre ao <b>controle de admissão global</b>, que impede que uma tabela consuma mais capacidade do que lhe é permitido.</p>
-    <p>Em seguida, encaminha a operação ao <b>nó de armazenamento</b> apropriado. Notem que esses nós estão dispersos em <b>zonas de disponibilidade</b> distintas — centros de dados fisicamente isolados dentro de uma mesma região.</p>
-    <p>Subjacente a tudo isso, opera um serviço denominado <i>autoadmin</i>, uma espécie de sistema nervoso central que monitora continuamente a saúde da frota e substitui, de forma autônoma, réplicas ou componentes defeituosos.”</p>
-  </div>
+  <section class="card">
+    <a class="thumb" href="slides.html#11" target="_blank"><iframe src="slides.html#11" loading="lazy" tabindex="-1" title="Slide 11"></iframe></a>
+    <div>
+      <h2><span class="n">11</span> Capacidade <span class="t">40 s</span></h2>
+      <p>“Há dois jeitos. No on-demand, você paga por cada pedido e a tabela cresce sozinha conforme o uso. No provisionado, você reserva uma capacidade fixa e o custo fica previsível. Um milhão de gravações custa uns 63 centavos de dólar.”</p>
+    </div>
+  </section>
+  <div class="link">“Isso é o básico. Agora, duas formas de ir além.”</div>
 
-  <!-- 9 -->
-  <h2 id="s9">9 · Cada partição tem 3 cópias <span class="time">1:30</span></h2>
-  <p class="on-screen">Na tela: escrita → líder (Zona A) → réplicas (Zonas B e C).</p>
-  <div class="say">
-    <p>“Cada partição é mantida em <b>três réplicas</b>, alocadas em zonas de disponibilidade diferentes. Esse grupo de replicação recorre ao algoritmo de consenso <b>Multi-Paxos</b> para eleger um <b>líder</b>.</p>
-    <p>Somente o líder aceita escritas. Ao recebê-las, ele gera um registro no <b>log de escrita antecipada</b> — o <i>write-ahead log</i> — e o propaga às demais réplicas.</p>
-    <p>A operação é confirmada ao cliente tão logo <b>duas das três</b> réplicas tenham persistido o registro: é o chamado <b>quórum</b>. Dessa forma, ainda que uma zona inteira se torne indisponível, nenhum dado confirmado se perde e o sistema prossegue operando.</p>
-    <p>Na eventualidade de falha do líder, as réplicas remanescentes detectam a ausência e conduzem uma nova eleição. É sobre esse mecanismo que repousa o compromisso de <b>99,99% de disponibilidade</b> por região.”</p>
-  </div>
+  <section class="card">
+    <a class="thumb" href="slides.html#12" target="_blank"><iframe src="slides.html#12" loading="lazy" tabindex="-1" title="Slide 12"></iframe></a>
+    <div>
+      <h2><span class="n">12</span> DAX <span class="t">30 s</span></h2>
+      <p>“A primeira é ainda mais velocidade. O DAX é uma memória rápida que fica no meio do caminho e guarda os dados mais usados, como o cache do processador. Com ele, a resposta cai de milissegundos para microssegundos.”</p>
+    </div>
+  </section>
+  <div class="link">“A segunda forma é alcance.”</div>
 
-  <!-- 10 -->
-  <h2 id="s10">10 · Leitura: você escolhe <span class="time">0:50</span></h2>
-  <p class="on-screen">Na tela: Eventual × Forte.</p>
-  <div class="say">
-    <p>“Essa arquitetura repercute diretamente nas leituras. Na <b>leitura eventualmente consistente</b>, que é o padrão, qualquer réplica pode responder; o custo é a metade, mas, por um breve intervalo, o resultado pode não refletir uma escrita recém-concluída.</p>
-    <p>Na <b>leitura fortemente consistente</b>, apenas o líder responde, assegurando sempre o valor mais recente. Trata-se de um <i>trade-off</i> clássico dos sistemas distribuídos entre custo e consistência — e o DynamoDB delega essa escolha ao desenvolvedor, requisição a requisição. Na demonstração, mensuro ambas.”</p>
-  </div>
+  <section class="card">
+    <a class="thumb" href="slides.html#13" target="_blank"><iframe src="slides.html#13" loading="lazy" tabindex="-1" title="Slide 13"></iframe></a>
+    <div>
+      <h2><span class="n">13</span> Global Tables <span class="t">30 s</span></h2>
+      <p>“Com as Global Tables, a tabela é copiada para vários países, e cada usuário acessa a cópia mais perto dele. Isso deixa o sistema no ar 99,999% do tempo — uns cinco minutos parado por ano.”</p>
+    </div>
+  </section>
+  <div class="link">“Mas tudo isso funciona em escala real?”</div>
 
-  <!-- 11 -->
-  <h2 id="s11">11 · Capacidade <span class="time">1:00</span></h2>
-  <p class="on-screen">Na tela: On-demand × Provisionado, RCU e WCU.</p>
-  <div class="say">
-    <p>“Quanto à capacidade, há dois modos de operação. No modo <b>sob demanda</b>, o padrão recomendado pela AWS, dispensa-se qualquer planejamento: cobra-se por requisição e a tabela ajusta-se automaticamente à carga.</p>
-    <p>No modo <b>provisionado</b>, o desenvolvedor especifica de antemão a vazão de leitura e escrita desejada e paga por hora pela capacidade reservada — alternativa adequada a cargas estáveis, em que a previsibilidade de custo é prioritária.</p>
-    <p>A unidade de medida é simples: uma <b>RCU</b> equivale a uma leitura fortemente consistente por segundo de até 4 KB; uma <b>WCU</b>, a uma escrita por segundo de até 1 KB.</p>
-    <p>A título de referência: no modo sob demanda, na região da Virgínia, um milhão de escritas custa cerca de sessenta e três centavos de dólar, e o nível gratuito contempla 25 GB de armazenamento.”</p>
-  </div>
+  <section class="card">
+    <a class="thumb" href="slides.html#14" target="_blank"><iframe src="slides.html#14" loading="lazy" tabindex="-1" title="Slide 14"></iframe></a>
+    <div>
+      <h2><span class="n">14</span> Prime Day 2025 <span class="t">45 s</span></h2>
+      <p>“Funciona. No Prime Day de 2025, o DynamoDB chegou a 151 milhões de pedidos por segundo, ainda respondendo em milissegundos. Em 2021 eram 89 milhões: a carga cresceu quase 70% e o sistema acompanhou. É a resposta completa ao “como?” do começo: gavetas espalhadas, trabalhando em paralelo.”</p>
+    </div>
+  </section>
+  <div class="link">“Então, quando vale a pena usar?”</div>
 
-  <!-- 12 -->
-  <h2 id="s12">12 · DAX: cache em memória <span class="time">0:45</span></h2>
-  <p class="on-screen">Na tela: diagrama da AWS — aplicação → cluster DAX → DynamoDB.</p>
-  <div class="say">
-    <p>“Para cenários em que milissegundos ainda são excessivos, a AWS oferece o <b>DAX</b>, o DynamoDB Accelerator: um cluster de cache em memória interposto entre a aplicação e a tabela.</p>
-    <p>Em caso de acerto no cache, a resposta é entregue em <b>microssegundos</b> — segundo a AWS, um ganho de até dez vezes. Em caso de falha, o DAX recorre ao DynamoDB e armazena o resultado para requisições subsequentes. É, em última análise, o mesmo princípio da hierarquia de memória de um processador: uma camada rápida e próxima diante de uma camada mais lenta e distante.”</p>
-  </div>
+  <section class="card">
+    <a class="thumb" href="slides.html#15" target="_blank"><iframe src="slides.html#15" loading="lazy" tabindex="-1" title="Slide 15"></iframe></a>
+    <div>
+      <h2><span class="n">15</span> Quando usar? <span class="t">35 s</span></h2>
+      <p>“Quando você sabe a chave do que procura e tem muito acesso: jogos, sensores, carrinhos de compra. Não é bom para cruzar várias tabelas ou montar relatórios complexos — aí um banco relacional é melhor.”</p>
+    </div>
+  </section>
+  <div class="link">“Agora, vamos ver tudo isso funcionando.”</div>
 
-  <!-- 13 -->
-  <h2 id="s13">13 · Global Tables <span class="time">0:45</span></h2>
-  <p class="on-screen">Na tela: 99,999% · multi-região · multi-ativo.</p>
-  <div class="say">
-    <p>“Para transcender os limites de uma única região, existem as <b>Global Tables</b>: a mesma tabela replicada automaticamente em diversas regiões do globo — São Paulo, Virgínia e Irlanda, por exemplo.</p>
-    <p>Todas as réplicas aceitam leituras <b>e escritas</b>, de modo que cada usuário é atendido pela região mais próxima. Com isso, o compromisso de disponibilidade eleva-se a <b>99,999%</b> — algo em torno de cinco minutos de indisponibilidade por ano.”</p>
-  </div>
+  <section class="card">
+    <a class="thumb" href="slides.html#16" target="_blank"><iframe src="slides.html#16" loading="lazy" tabindex="-1" title="Slide 16"></iframe></a>
+    <div>
+      <h2><span class="n">16</span> Demonstração <span class="t">3 min 30 s</span></h2>
+      <p>Dê play (barra de espaço) e fale acompanhando as cenas abaixo.</p>
+    </div>
+    <div class="video">
+      <p><span class="when">0:00 · Criar a tabela</span>“Começo no console da AWS. Para criar uma tabela, só preciso de um nome e da chave: o artista define a gaveta, e o nome da música, a ordem dentro dela. Não escolho servidor nem disco. Em poucos segundos, a tabela está pronta.”</p>
+      <p><span class="when">0:30 · Inserir itens</span>“Agora coloco algumas músicas. Reparem que cada uma tem campos diferentes — uma tem prêmios, outra tem gênero. Como vimos, só a chave é obrigatória.”</p>
+      <p><span class="when">1:00 · Buscar pela chave</span>“Quero só as músicas da Acme Band. Como informei a chave, o DynamoDB vai direto na gaveta certa e traz só elas, já em ordem. No editor PartiQL, faço o mesmo com um comando parecido com SQL.”</p>
+      <p><span class="when">1:30 · Iniciar o teste</span>“Agora, o desempenho. Este é o CloudShell, um terminal dentro da própria AWS. Rodo um script que cria uma tabela de sensores e grava duas mil leituras.”</p>
+      <p><span class="when">1:50 · Escrita</span>“Gravando uma leitura por vez, foram <span class="blank"></span> por segundo. Com dezesseis gravações em paralelo, <span class="blank"></span> por segundo — <span class="blank"></span> vezes mais rápido. São as gavetas trabalhando ao mesmo tempo.”</p>
+      <p><span class="when">2:15 · Tempo de resposta</span>“Agora, trezentas leituras. Metade respondeu em menos de <span class="blank"></span> milissegundos, e 99% ficaram abaixo de <span class="blank"></span>. A leitura forte, que consulta a líder, ficou quase igual.”</p>
+      <p><span class="when">2:35 · Query × Scan</span>“Por último, busco as leituras de um sensor de dois jeitos. Pela chave, o banco leu só cem itens. Varrendo a tabela inteira, leu dois mil para achar os mesmos cem. Por isso a chave é tão importante.”</p>
+      <p><span class="when">2:55 · Métricas</span>“Na aba de monitoramento, dá para ver o pico de uso que o teste acabou de gerar.”</p>
+      <p><span class="when">3:15 · Encerrar</span>“Para terminar, apago as tabelas, para não deixar nada rodando. E esse foi o DynamoDB funcionando na prática.”</p>
+    </div>
+  </section>
+  <div class="link">“Mas o que esses resultados querem dizer?”</div>
 
-  <!-- 14 -->
-  <h2 id="s14">14 · Prime Day 2025 <span class="time">1:00</span></h2>
-  <p class="on-screen">Na tela: 151 milhões de requisições por segundo.</p>
-  <div class="say">
-    <p>“Resta a pergunta: tudo isso se sustenta na prática? Durante o <b>Prime Day de 2025</b>, segundo o blog oficial da AWS, o DynamoDB atingiu um pico de <b>151 milhões de requisições por segundo</b>, oriundas da Alexa, dos sites da Amazon e dos centros de distribuição. Ao longo do evento, foram <b>dezenas de trilhões</b> de chamadas — com respostas na casa dos milissegundos e alta disponibilidade.</p>
-    <p>Para efeito de comparação, no Prime Day de 2021 o pico registrado havia sido de 89,2 milhões por segundo. Em quatro anos, um crescimento de quase setenta por cento, sem que as aplicações precisassem alterar a forma como utilizam o banco. É a escala horizontal demonstrada em produção.”</p>
-  </div>
+  <section class="card">
+    <a class="thumb" href="slides.html#17" target="_blank"><iframe src="slides.html#17" loading="lazy" tabindex="-1" title="Slide 17"></iframe></a>
+    <div>
+      <h2><span class="n">17</span> O que isso quer dizer? <span class="t">50 s</span></h2>
+      <p>“Criamos a tabela sem nenhum servidor: quem cuida da infraestrutura é a AWS. Gravar em paralelo foi muitas vezes mais rápido: são as partições trabalhando ao mesmo tempo. As leituras ficaram em milissegundos, até as mais lentas: a latência é previsível. E a busca pela chave leu vinte vezes menos que a varredura: a chave é tudo. Em resumo, é a escala horizontal na prática — a resposta ao “como?” do começo.”</p>
+    </div>
+  </section>
+  <div class="link">“Para fechar, as fontes que usei.”</div>
 
-  <!-- 15 -->
-  <h2 id="s15">15 · Quando usar? <span class="time">0:50</span></h2>
-  <p class="on-screen">Na tela: Bom para × Não é ideal para.</p>
-  <div class="say">
-    <p>“Cabe, então, delimitar o seu domínio de aplicação. O DynamoDB sobressai quando os padrões de acesso são conhecidos e baseados em chave, e quando o tráfego é volumoso ou imprevisível: jogos, Internet das Coisas, carrinhos de compra, sessões de usuário.</p>
-    <p>Em contrapartida, não é a escolha mais adequada quando se exigem junções e consultas arbitrárias, ou análises complexas sobre grandes volumes — domínios em que bancos relacionais e <i>data warehouses</i> se mostram mais apropriados. Convém notar que o seu desempenho deriva, justamente, de restringir deliberadamente o tipo de consulta permitido.</p>
-    <p>Passemos, agora, à demonstração.”</p>
-  </div>
+  <section class="card">
+    <a class="thumb" href="slides.html#18" target="_blank"><iframe src="slides.html#18" loading="lazy" tabindex="-1" title="Slide 18"></iframe></a>
+    <div>
+      <h2><span class="n">18</span> Referências <span class="t">15 s</span></h2>
+      <p>“Usei principalmente a documentação oficial da AWS e dois artigos escritos por engenheiros da Amazon.”</p>
+    </div>
+  </section>
 
-  <!-- 16 -->
-  <h2 id="s16">16 · Demonstração (vídeo) <span class="time">3:30</span></h2>
-  <p class="on-screen">Na tela: o vídeo gravado (veja o guia da demonstração). Dê play com o mouse ou com a barra de espaço.</p>
-  <div class="tip"><b>Dica:</b> grave o vídeo <b>sem áudio</b> e narre ao vivo — assim você controla o ritmo e pode pausar para comentar um número. A narração abaixo segue a ordem do guia da demonstração; preencha as lacunas com os valores da sua gravação.</div>
-  <div class="say">
-    <p><b>[Console — criação da tabela]</b> “Encontro-me no console da AWS, no serviço DynamoDB. Crio a tabela <i>Music</i>, definindo <i>Artist</i> como chave de partição e <i>SongTitle</i> como chave de ordenação. Observem que não especifico servidor, disco ou qualquer recurso de infraestrutura — apenas o nome e a chave. Em poucos segundos, a tabela encontra-se ativa.”</p>
-    <p><b>[Inserção de itens]</b> “Insiro, agora, alguns itens. Reparem que cada um possui um conjunto distinto de atributos, o que evidencia a ausência de esquema fixo.”</p>
-    <p><b>[Query e PartiQL]</b> “Executo uma consulta pela chave de partição <i>Acme Band</i>: o sistema dirige-se diretamente à partição correspondente e devolve apenas as músicas dessa banda, já ordenadas. No editor PartiQL, obtenho o mesmo resultado com uma sintaxe próxima à do SQL.”</p>
-    <p><b>[CloudShell — script]</b> “Passo, então, à avaliação de desempenho. No CloudShell — um terminal integrado ao próprio console —, executo um script em Python que cria uma tabela de leituras de sensores e grava dois mil itens.”</p>
-    <p><b>[Escrita sequencial × paralela]</b> “Primeiramente, duzentos itens gravados <b>sequencialmente</b>, um a um: cerca de ___ itens por segundo. Em seguida, mil e oitocentos itens com <b>dezesseis threads concorrentes</b>, em lotes de vinte e cinco: ___ itens por segundo, um ganho de aproximadamente ___ vezes. Como os dados estão distribuídos entre partições, o serviço absorve as requisições em paralelo.”</p>
-    <p><b>[Latência]</b> “Na sequência, trezentas leituras por chave. A mediana situou-se em ___ milissegundos e, mesmo no percentil 99 — o 1% mais lento —, a latência manteve-se em ___ ms. A leitura fortemente consistente, atendida pelo líder, apresentou valores semelhantes: ___ ms.”</p>
-    <p><b>[Query × Scan]</b> “Por fim, recupero as leituras de um único sensor de duas maneiras. A <b>Query</b>, guiada pela chave, leu apenas os cem itens pertinentes. O <b>Scan</b> percorreu a tabela integralmente — dois mil itens — para devolver exatamente os mesmos cem, consumindo uma capacidade muitas vezes superior. Eis, na prática, por que a chave é tudo.”</p>
-    <p><b>[Métricas e limpeza]</b> “Na aba de monitoramento, as métricas são expostas pelo CloudWatch. E, ao término, removo as tabelas, de modo a não deixar recursos ativos.”</p>
-  </div>
+  <section class="card">
+    <a class="thumb" href="slides.html#19" target="_blank"><iframe src="slides.html#19" loading="lazy" tabindex="-1" title="Slide 19"></iframe></a>
+    <div>
+      <h2><span class="n">19</span> Obrigado <span class="t">15 s</span></h2>
+      <p>“Obrigado pela atenção! Alguma pergunta?”</p>
+    </div>
+  </section>
 
-  <!-- 17 -->
-  <h2 id="s17">17 · Referências <span class="time">0:20</span></h2>
-  <div class="say">
-    <p>“Estas são as referências que fundamentam a apresentação: em sua maioria, documentação oficial da AWS, o blog da AWS sobre o Prime Day e dois artigos científicos de autoria de engenheiros da Amazon — o Dynamo, de 2007, e o do DynamoDB, de 2022.”</p>
-  </div>
-
-  <!-- 18 -->
-  <h2 id="s18">18 · Obrigado <span class="time">0:20</span></h2>
-  <div class="say">
-    <p>“Encerro por aqui. Agradeço a atenção de todos e coloco-me à disposição para perguntas.”</p>
-  </div>
-
-  <h2 id="qa">Perguntas prováveis (e respostas curtas)</h2>
-  <dl class="qa">
-    <dt>Qual a diferença entre o Dynamo (2007) e o DynamoDB?</dt>
-    <dd>O Dynamo era um sistema interno <i>sem líder</i>: qualquer réplica aceitava escritas, e eventuais conflitos eram reconciliados posteriormente, sob consistência eventual. O DynamoDB, por sua vez, é um serviço gerenciado que adota um líder por partição, eleito via Multi-Paxos — o que lhe permite oferecer leituras fortemente consistentes.</dd>
-
-    <dt>O que é uma partição quente (hot partition)?</dt>
-    <dd>Ocorre quando uma chave concentra parcela desproporcional do tráfego, de modo que todas as requisições convergem para a mesma partição, convertendo-a em gargalo. A mitigação passa por chaves de alta cardinalidade; além disso, o mecanismo de <i>adaptive capacity</i> redistribui capacidade e pode subdividir partições excessivamente acessadas.</dd>
-
-    <dt>O DynamoDB oferece transações?</dt>
-    <dd>Sim. Desde 2018 há transações ACID (<code>TransactWriteItems</code> e <code>TransactGetItems</code>), abrangendo até 100 itens, inclusive em tabelas distintas, desde que na mesma conta e região.</dd>
-
-    <dt>É possível utilizar SQL?</dt>
-    <dd>Por meio do PartiQL, uma linguagem compatível com SQL para SELECT, INSERT, UPDATE e DELETE. Não há, contudo, suporte a junções, e um SELECT que não especifique a chave degenera numa varredura completa — custosa e lenta.</dd>
-
-    <dt>Como o DynamoDB se posiciona diante do teorema CAP?</dt>
-    <dd>Dentro de uma região, toda escrita é confirmada por quórum, e o desenvolvedor escolhe, leitura a leitura, entre consistência eventual e forte. Nas Global Tables, o modo padrão replica de forma assíncrona entre regiões, privilegiando disponibilidade e latência; há, porém, um modo de consistência forte multirregional para cenários que a exijam.</dd>
-
-    <dt>Qual foi o custo da demonstração?</dt>
-    <dd>Praticamente nulo: alguns milhares de requisições no modo sob demanda custam frações de centavo de dólar, montante integralmente coberto pelo nível gratuito. As tabelas foram removidas ao término.</dd>
-
-    <dt>É possível executá-lo sem uma conta na AWS?</dt>
-    <dd>Para fins de desenvolvimento, existe o DynamoDB Local, que roda na própria máquina. Ele reproduz a API, mas não o desempenho nem a natureza distribuída do serviço real.</dd>
-
-    <dt>Em que difere do MongoDB ou do Cassandra?</dt>
-    <dd>Todos pertencem à família NoSQL. O Cassandra descende conceitualmente do Dynamo; o MongoDB é orientado a documentos. A distinção essencial é operacional: o DynamoDB é <i>serverless</i>, sem cluster a instalar, dimensionar ou atualizar.</dd>
-  </dl>
+  <details>
+    <summary>Se fizerem perguntas</summary>
+    <p><b>Dá para usar SQL?</b> Sim, com o PartiQL, mas sem cruzar tabelas.</p>
+    <p><b>Tem transações?</b> Sim, com até 100 itens de uma vez.</p>
+    <p><b>Qual o tamanho máximo de um item?</b> 400 KB.</p>
+    <p><b>Quanto custou a demonstração?</b> Praticamente nada; ficou dentro do nível gratuito.</p>
+  </details>
 </main>
 </body>
 </html>

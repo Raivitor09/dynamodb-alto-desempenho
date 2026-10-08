@@ -36,6 +36,15 @@
   .check li::before { content: "☐"; position: absolute; left: -24px; color: var(--accent); }
   details { background: var(--soft); border-radius: 10px; padding: 10px 16px; margin: 10px 0; }
   summary { cursor: pointer; font-weight: 600; }
+  .conclusao { background: var(--ok); border-radius: 14px; padding: 6px 24px 18px; margin: 28px 0 0; }
+  .conclusao h3 { color: var(--ok-ink); }
+  .conclusao p { margin: 10px 0; }
+  .conclusao .resumo { border-top: 1px solid #bfe3cd; padding-top: 12px; margin-top: 14px; }
+  .scene { border: 1px solid var(--line); border-radius: 12px; padding: 14px 20px; margin: 12px 0; }
+  .scene .when { font-size: 15px; font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+  .scene p { margin: 6px 0; }
+  .scene .say { background: #fffaf0; border-left: 4px solid var(--aws); border-radius: 0 8px 8px 0; padding: 8px 14px; }
+  .blank { display: inline-block; min-width: 48px; border-bottom: 2px solid var(--aws); }
   @media (max-width: 640px) { h1 { font-size: 30px; } }
 </style>
 </head>
@@ -192,18 +201,74 @@ SCAN   → retornou  100 | leu  2000 itens |   20.0 RCU |   120.0 ms</pre></div>
     <li>Mostre os gráficos de capacidade de leitura/escrita consumida e de latência. Os pontos aparecem com 1 a 5 minutos de atraso — então grave esta parte <b>alguns minutos depois</b> de rodar o script.</li>
   </ol>
 
+  <div class="conclusao">
+    <h3>O que isso quer dizer?</h3>
+    <p><b>Parte A:</b> criamos uma tabela sem configurar nenhum servidor e encontramos as músicas só informando a chave. <b>Isso quer dizer que</b> o DynamoDB cuida da infraestrutura sozinho, e a chave é o caminho direto até o dado.</p>
+    <p><b>Escrita:</b> gravar em paralelo foi muitas vezes mais rápido do que gravar um item por vez. <b>Isso quer dizer que</b> os dados estão espalhados em várias partições que trabalham ao mesmo tempo — é a escala horizontal acontecendo na prática.</p>
+    <p><b>Latência:</b> as leituras responderam em poucos milissegundos, e até as mais lentas (p99) continuaram rápidas. <b>Isso quer dizer que</b> o tempo de resposta é previsível, e não apenas rápido na média.</p>
+    <p><b>Query × Scan:</b> a Query leu 100 itens; o Scan leu 2.000 para chegar ao mesmo resultado. <b>Isso quer dizer que</b>, no DynamoDB, o desempenho depende de buscar pela chave — numa tabela gigante, essa diferença seria enorme.</p>
+    <p><b>Parte C:</b> as métricas mostraram o uso gerado pelo teste, sem instalarmos nada. <b>Isso quer dizer que</b> o serviço já vem monitorado e pronto para produção.</p>
+    <p class="resumo"><b>Em resumo:</b> o DynamoDB é rápido em qualquer escala porque divide os dados pela chave e trabalha em paralelo — o mesmo princípio da computação de alto desempenho que estudamos na disciplina.</p>
+  </div>
+
   <!-- 6 -->
   <h2><span class="n">6</span>Gravar o vídeo</h2>
   <h3>Roteiro do vídeo (~3min30)</h3>
-  <table>
-    <tr><th>Tempo</th><th>Cena</th></tr>
-    <tr><td>0:00–0:35</td><td>Console DynamoDB → Create table <code>Music</code> → Active</td></tr>
-    <tr><td>0:35–1:10</td><td>Create item (2 itens bastam no vídeo; os outros podem estar prontos) → mostrar a lista com atributos diferentes</td></tr>
-    <tr><td>1:10–1:40</td><td>Query por <code>Acme Band</code> → PartiQL <code>SELECT</code></td></tr>
-    <tr><td>1:40–2:50</td><td>CloudShell → <code>python3 demo_dynamodb.py</code> → deixar a saída parada alguns segundos em cada bloco</td></tr>
-    <tr><td>2:50–3:15</td><td>Aba Monitor com os gráficos</td></tr>
-    <tr><td>3:15–3:30</td><td>Delete table (mostrar a confirmação)</td></tr>
-  </table>
+  <p>Grave seguindo as cenas abaixo. <b>Na tela</b> é o que fazer; a caixa amarela é o que você diz ao vivo enquanto o vídeo passa (o mesmo texto está no slide 16 do <a href="roteiro.html">roteiro</a>). Rode o script uma vez antes para já saber os números e preencher as lacunas.</p>
+
+  <div class="scene">
+    <div class="when">0:00–0:30 · Criar a tabela</div>
+    <p><b>Na tela:</b> DynamoDB → <b class="ui">Create table</b> → <code>Music</code>, <code>Artist</code>, <code>SongTitle</code> → <b class="ui">Create table</b> → esperar <b>Active</b>.</p>
+    <p class="say">“Começo no console da AWS. Para criar uma tabela, só preciso de um nome e da chave: o artista define a gaveta, e o nome da música, a ordem dentro dela. Não escolho servidor nem disco. Em poucos segundos, a tabela está pronta.”</p>
+  </div>
+
+  <div class="scene">
+    <div class="when">0:30–1:00 · Inserir itens</div>
+    <p><b>Na tela:</b> <b class="ui">Explore table items</b> → <b class="ui">Create item</b> → criar 2 itens (os outros podem estar prontos) → mostrar a lista.</p>
+    <p class="say">“Agora coloco algumas músicas. Reparem que cada uma tem campos diferentes — uma tem prêmios, outra tem gênero. Como vimos, só a chave é obrigatória.”</p>
+  </div>
+
+  <div class="scene">
+    <div class="when">1:00–1:30 · Buscar pela chave</div>
+    <p><b>Na tela:</b> <b class="ui">Query</b> com <code>Acme Band</code> → <b class="ui">Run</b>. Depois <b class="ui">PartiQL editor</b> com o <code>SELECT</code>.</p>
+    <p class="say">“Quero só as músicas da Acme Band. Como informei a chave, o DynamoDB vai direto na gaveta certa e traz só elas, já em ordem. No editor PartiQL, faço o mesmo com um comando parecido com SQL.”</p>
+  </div>
+
+  <div class="scene">
+    <div class="when">1:30–1:50 · Iniciar o teste</div>
+    <p><b>Na tela:</b> abrir o CloudShell → digitar <code>python3 demo_dynamodb.py</code> → Enter.</p>
+    <p class="say">“Agora, o desempenho. Este é o CloudShell, um terminal dentro da própria AWS. Rodo um script que cria uma tabela de sensores e grava duas mil leituras.”</p>
+  </div>
+
+  <div class="scene">
+    <div class="when">1:50–2:15 · Escrita: um por vez × em paralelo</div>
+    <p><b>Na tela:</b> parar no bloco <b>2) Escrita</b> por alguns segundos (dê zoom na edição).</p>
+    <p class="say">“Gravando uma leitura por vez, foram <span class="blank"></span> por segundo. Com dezesseis gravações em paralelo, <span class="blank"></span> por segundo — <span class="blank"></span> vezes mais rápido. São as gavetas trabalhando ao mesmo tempo.”</p>
+  </div>
+
+  <div class="scene">
+    <div class="when">2:15–2:35 · Tempo de resposta</div>
+    <p><b>Na tela:</b> parar no bloco <b>3) Latência</b>.</p>
+    <p class="say">“Agora, trezentas leituras. Metade respondeu em menos de <span class="blank"></span> milissegundos, e 99% ficaram abaixo de <span class="blank"></span>. A leitura forte, que consulta a líder, ficou quase igual.”</p>
+  </div>
+
+  <div class="scene">
+    <div class="when">2:35–2:55 · Query × Scan</div>
+    <p><b>Na tela:</b> parar no bloco <b>4) Query x Scan</b>.</p>
+    <p class="say">“Por último, busco as leituras de um sensor de dois jeitos. Pela chave, o banco leu só cem itens. Varrendo a tabela inteira, leu dois mil para achar os mesmos cem. Por isso a chave é tão importante.”</p>
+  </div>
+
+  <div class="scene">
+    <div class="when">2:55–3:15 · Métricas</div>
+    <p><b>Na tela:</b> tabela <code>LeiturasSensores</code> → aba <b class="ui">Monitor</b> (grave alguns minutos depois do script).</p>
+    <p class="say">“Na aba de monitoramento, dá para ver o pico de uso que o teste acabou de gerar.”</p>
+  </div>
+
+  <div class="scene">
+    <div class="when">3:15–3:30 · Encerrar</div>
+    <p><b>Na tela:</b> apagar as tabelas (<b class="ui">Delete</b> → <code>confirm</code>).</p>
+    <p class="say">“Para terminar, apago as tabelas, para não deixar nada rodando. E esse foi o DynamoDB funcionando na prática.”</p>
+  </div>
 
   <h3>Como gravar no Windows</h3>
   <ul>
@@ -216,7 +281,7 @@ SCAN   → retornou  100 | leu  2000 itens |   20.0 RCU |   120.0 ms</pre></div>
     <li>Aumente o zoom do navegador para <b>125–150%</b> (<code>Ctrl +</code>). No CloudShell, aumente a fonte em <b class="ui">⚙ Preferences</b> → <b>Font size: Large</b>.</li>
     <li>Use o tema claro do console e feche abas e notificações.</li>
     <li>Edite no <b>Clipchamp</b> (já vem no Windows 11): corte as esperas, acelere trechos lentos (1,5–2×) e dê zoom na saída do script.</li>
-    <li>Grave <b>sem áudio</b> e narre ao vivo usando o <a href="roteiro.html#s16">roteiro do slide 16</a>.</li>
+    <li>Grave <b>sem áudio</b> e narre ao vivo com as falas acima (também estão no slide 16 do <a href="roteiro.html">roteiro</a>).</li>
   </ul>
   <div class="box ok"><b>Onde salvar:</b> exporte em MP4 (1080p) com o nome <code>demo.mp4</code> dentro da pasta <code>video</code> do projeto. O slide 16 carrega o vídeo automaticamente de <code>video/demo.mp4</code>.</div>
   <div class="box warn"><b>Não mostre no vídeo</b> número da conta, e-mail ou página de faturamento. Se aparecer, corte ou desfoque na edição.</div>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guia da Demonstração</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#14181f; --muted:#5d6878; --line:#e2e7ef; --soft:#f4f7fb; --accent:#1f5fbf; --aws:#ff9900; --warn:#fff4e5; --warn-ink:#8a4b00; --ok:#e9f7ef; --ok-ink:#1d6b3f; --code:#0f1720; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:#fff; color:var(--ink); font-family:"Inter","Segoe UI",system-ui,sans-serif; font-size:18px; line-height:1.65; }
+  main { max-width: 880px; margin: 0 auto; padding: 48px 16px 120px; }
+  h1 { font-size: 40px; line-height:1.15; margin: 0 0 8px; letter-spacing:-.5px; }
+  h2 { font-size: 27px; margin: 60px 0 10px; padding-top: 20px; border-top: 1px solid var(--line); }
+  h2 .n { display:inline-flex; width:40px; height:40px; border-radius:50%; background:var(--accent); color:#fff; align-items:center; justify-content:center; font-size:20px; margin-right:10px; vertical-align: 3px; }
+  h3 { font-size: 20px; margin: 30px 0 8px; }
+  .meta { color: var(--muted); }
+  ol, ul { padding-left: 26px; }
+  li { margin: 6px 0; }
+  b.ui { background: var(--soft); border: 1px solid var(--line); border-radius: 6px; padding: 0 7px; font-weight: 600; white-space: nowrap; }
+  code { font-family: "JetBrains Mono", Consolas, monospace; background: var(--soft); padding: 1px 6px; border-radius: 5px; font-size: .88em; }
+  .box { border-radius: 12px; padding: 14px 20px; margin: 16px 0; }
+  .warn { background: var(--warn); color: var(--warn-ink); }
+  .ok { background: var(--ok); color: var(--ok-ink); }
+  .info { background: var(--soft); color: #33404f; }
+  .codeblock { position: relative; margin: 14px 0; }
+  .codeblock pre { background: var(--code); color: #e6edf3; border-radius: 12px; padding: 18px 20px; overflow-x: auto; font-family: "JetBrains Mono", Consolas, monospace; font-size: 14.5px; line-height: 1.55; margin: 0; }
+  .codeblock button { position: absolute; top: 10px; right: 10px; font: 600 13px "Inter", sans-serif; background: #2b3746; color: #fff; border: 0; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+  .codeblock button:hover { background: var(--accent); }
+  table { width:100%; border-collapse: collapse; font-size: 16px; margin: 14px 0; }
+  th, td { text-align:left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  img.shot { max-width: 100%; border: 1px solid var(--line); border-radius: 10px; margin: 12px 0; }
+  .cap { font-size: 14px; color: var(--muted); margin-top: -6px; }
+  .check li { list-style: none; position: relative; padding-left: 4px; }
+  .check li::before { content: "☐"; position: absolute; left: -24px; color: var(--accent); }
+  details { background: var(--soft); border-radius: 10px; padding: 10px 16px; margin: 10px 0; }
+  summary { cursor: pointer; font-weight: 600; }
+  @media (max-width: 640px) { h1 { font-size: 30px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Guia da demonstração — DynamoDB na AWS</h1>
+  <p class="meta">Para fazer sozinho, passo a passo, e gravar o vídeo do slide 16.<br>
+  Tempo estimado: ~1h na primeira vez (incluindo criar a conta) · Custo esperado: <b>US$ 0,00</b> (fica dentro do nível gratuito).</p>
+
+  <div class="box info">
+    <b>Sim, a demonstração é na AWS.</b> Você vai usar só o navegador: o <b>console da AWS</b> (interface gráfica) e o <b>CloudShell</b> (um terminal Linux dentro do próprio console, já autenticado, com Python e AWS CLI instalados). Não precisa instalar nada no seu computador.
+  </div>
+
+  <h3>O que o vídeo vai mostrar</h3>
+  <table>
+    <tr><th>Parte</th><th>O que aparece</th><th>Conceito da apresentação</th></tr>
+    <tr><td>A · Console</td><td>Criar a tabela <code>Music</code>, inserir itens, fazer Query e PartiQL</td><td>Serverless, modelo de dados, chave primária</td></tr>
+    <tr><td>B · CloudShell</td><td>Script Python: escrita sequencial × paralela, latência p50/p99, Query × Scan</td><td>Escala horizontal, paralelismo, latência previsível, partições</td></tr>
+    <tr><td>C · Métricas</td><td>Aba <b class="ui">Monitor</b> da tabela (CloudWatch)</td><td>Serviço gerenciado / observabilidade</td></tr>
+  </table>
+
+  <!-- 1 -->
+  <h2><span class="n">1</span>Conta na AWS</h2>
+  <ol>
+    <li>Acesse <a href="https://aws.amazon.com/free/">aws.amazon.com/free</a> e clique em criar conta.</li>
+    <li>Informe e-mail, nome da conta e senha. A AWS pede um <b>cartão</b> e um <b>telefone</b> para verificação de identidade.</li>
+    <li>Quando perguntar o plano, escolha o <b>plano gratuito (Free plan)</b>. Nele não há cobrança: novos clientes recebem créditos (até US$ 200 por 6 meses) e o DynamoDB está entre os serviços “sempre gratuitos” dentro dos limites mensais (25 GB de armazenamento, entre outros).</li>
+  </ol>
+  <div class="box info"><b>Alternativa:</b> pergunte ao professor se a turma tem acesso ao <b>AWS Academy</b> (Learner Lab). Se tiver, dá para fazer tudo lá sem cartão — os passos abaixo são os mesmos.</div>
+
+  <h3>Proteção recomendada (5 minutos)</h3>
+  <ol>
+    <li><b>MFA na conta raiz:</b> canto superior direito → seu nome → <b class="ui">Security credentials</b> → <b class="ui">Assign MFA device</b> (use um app autenticador no celular).</li>
+    <li><b>Alerta de gastos:</b> pesquise <b class="ui">Budgets</b> na barra de busca do console → <b class="ui">Create budget</b> → modelo <b class="ui">Zero spend budget</b> → seu e-mail → criar. Você recebe um e-mail se qualquer centavo for cobrado.</li>
+  </ol>
+
+  <!-- 2 -->
+  <h2><span class="n">2</span>Escolha a região</h2>
+  <p>No canto superior direito do console há o seletor de região. Escolha <b>uma</b> e use a mesma em tudo:</p>
+  <ul>
+    <li><b>América do Sul (São Paulo) — <code>sa-east-1</code></b>: fica bonito na apresentação (“dados em São Paulo”).</li>
+    <li><b>US East (N. Virginia) — <code>us-east-1</code></b>: é a região usada nos exemplos e preços da documentação.</li>
+  </ul>
+  <div class="box warn">Tabelas só aparecem na região em que foram criadas. Se “sumiu” uma tabela, quase sempre é a região errada no seletor.</div>
+
+  <!-- 3 -->
+  <h2><span class="n">3</span>Parte A — Console: tabela, itens e consultas</h2>
+  <p>Baseado no tutorial oficial <a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/getting-started-step-1.html">Getting started with DynamoDB</a>.</p>
+
+  <h3>3.1 Criar a tabela <code>Music</code></h3>
+  <ol>
+    <li>Na barra de busca do console, digite <b>DynamoDB</b> e abra o serviço.</li>
+    <li>No menu da esquerda, <b class="ui">Tables</b> → <b class="ui">Create table</b>.</li>
+    <li><b>Table name:</b> <code>Music</code> · <b>Partition key:</b> <code>Artist</code> (String) · <b>Sort key:</b> <code>SongTitle</code> (String).</li>
+    <li>Em <b>Table settings</b>, deixe <b class="ui">Default settings</b>. Confira no resumo que o <b>Capacity mode</b> está como <b>On-demand</b> (se não estiver, escolha <b class="ui">Customize settings</b> e selecione On-demand).</li>
+    <li><b class="ui">Create table</b>. Em alguns segundos o status muda para <b>Active</b>.</li>
+  </ol>
+  <img class="shot" src="img/CreateTableMusic.png" alt="Tela Create table com o nome Music, partition key Artist e sort key SongTitle">
+  <p class="cap">Tela de criação da tabela (imagem da documentação da AWS).</p>
+
+  <h3>3.2 Inserir itens</h3>
+  <ol>
+    <li>Clique na tabela <b>Music</b> → <b class="ui">Explore table items</b> → <b class="ui">Create item</b>.</li>
+    <li>Preencha <code>Artist</code> e <code>SongTitle</code>. Para adicionar outros campos: <b class="ui">Add new attribute</b> → escolha o tipo.</li>
+    <li>Crie estes 4 itens (note que eles <b>não têm os mesmos atributos</b> — é de propósito, para mostrar que não há esquema fixo):</li>
+  </ol>
+  <table>
+    <tr><th>Artist</th><th>SongTitle</th><th>Outros atributos</th></tr>
+    <tr><td>No One You Know</td><td>Call Me Today</td><td>AlbumTitle (String) = Somewhat Famous · Awards (Number) = 1</td></tr>
+    <tr><td>Acme Band</td><td>Happy Day</td><td>AlbumTitle = Songs About Life · Awards = 10</td></tr>
+    <tr><td>Acme Band</td><td>PartiQL Rocks</td><td>AlbumTitle = Another Album Title · Awards = 8</td></tr>
+    <tr><td>Acme Band</td><td>Still in Love</td><td>Genre (String) = Rock · Year (Number) = 2015</td></tr>
+  </table>
+  <div class="box info"><b>Atalho:</b> em <b class="ui">Create item</b> existe a opção <b class="ui">JSON view</b>; dá para colar o item pronto. Exemplo (desligue a opção “View DynamoDB JSON” para usar JSON simples):</div>
+  <div class="codeblock"><button>Copiar</button><pre>{
+  "Artist": "Acme Band",
+  "SongTitle": "Still in Love",
+  "Genre": "Rock",
+  "Year": 2015
+}</pre></div>
+
+  <h3>3.3 Query pela chave</h3>
+  <ol>
+    <li>Ainda em <b class="ui">Explore table items</b>, abra <b>Scan or query items</b> e selecione <b class="ui">Query</b>.</li>
+    <li><b>Partition key:</b> <code>Acme Band</code> → <b class="ui">Run</b>. Devolve só as 3 músicas da banda, já ordenadas pela sort key.</li>
+    <li>(Opcional) Adicione condição na sort key: <b class="ui">Begins with</b> <code>H</code> → devolve só “Happy Day”.</li>
+  </ol>
+
+  <h3>3.4 PartiQL (sintaxe parecida com SQL)</h3>
+  <ol>
+    <li>No menu da esquerda, <b class="ui">PartiQL editor</b>.</li>
+    <li>Cole e clique em <b class="ui">Run</b>:</li>
+  </ol>
+  <div class="codeblock"><button>Copiar</button><pre>SELECT * FROM "Music" WHERE Artist = 'Acme Band'</pre></div>
+  <div class="codeblock"><button>Copiar</button><pre>INSERT INTO "Music" VALUE {'Artist': 'UEPB Band', 'SongTitle': 'Alto Desempenho', 'Year': 2026}</pre></div>
+
+  <!-- 4 -->
+  <h2><span class="n">4</span>Parte B — CloudShell: o teste de desempenho</h2>
+  <p>O script <code>demo/demo_dynamodb.py</code> (está na pasta do projeto) faz quatro coisas:</p>
+  <ol>
+    <li>cria a tabela <code>LeiturasSensores</code> (partition key <code>sensor_id</code>, sort key <code>ts</code>, on-demand);</li>
+    <li>grava 2.000 leituras de 20 sensores — 200 <b>uma por vez</b> e 1.800 com <b>16 threads em paralelo</b> (lotes de 25 com <code>BatchWriteItem</code>) — e compara itens/segundo;</li>
+    <li>faz 300 leituras por chave (<code>GetItem</code>) e mostra a latência média, p50, p90 e p99, com leitura <b>eventual</b> e <b>forte</b>;</li>
+    <li>busca as leituras de um sensor com <b>Query</b> e com <b>Scan</b> e compara itens lidos, capacidade consumida e tempo.</li>
+  </ol>
+
+  <h3>4.1 Abrir o CloudShell e enviar o script</h3>
+  <ol>
+    <li>No console (na <b>mesma região</b> da tabela), clique no ícone de terminal <b class="ui">&gt;_</b> na barra superior, ou pesquise <b>CloudShell</b>. Espere o terminal abrir (~30 s na primeira vez).</li>
+    <li>Menu <b class="ui">Actions</b> → <b class="ui">Upload file</b> → selecione <code>demo_dynamodb.py</code> (pasta <code>demo</code> do projeto).</li>
+    <li>Confira: <code>ls</code> deve listar o arquivo.</li>
+  </ol>
+  <details>
+    <summary>Sem upload? Cole o script direto no terminal</summary>
+    <p>Digite <code>cat &gt; demo_dynamodb.py &lt;&lt; 'EOF'</code>, tecle Enter, cole todo o conteúdo do arquivo, tecle Enter, digite <code>EOF</code> e Enter. O CloudShell pode mostrar um aviso de “Safe Paste” — confirme com <b class="ui">Paste</b>.</p>
+  </details>
+
+  <h3>4.2 Rodar</h3>
+  <div class="codeblock"><button>Copiar</button><pre>python3 demo_dynamodb.py</pre></div>
+  <p>Leva cerca de 20–40 segundos (a maior parte é a criação da tabela). Saída esperada (os números vão variar):</p>
+  <div class="codeblock"><button>Copiar</button><pre>================================================================
+  2) Escrita de 2000 itens: sequencial x paralela
+================================================================
+Sequencial (PutItem, 1 por vez)     :   200 itens em  1.2 s →    170 itens/s
+Paralela   (16 threads, lotes de 25):  1800 itens em  0.6 s →   3000 itens/s
+Ganho com paralelismo: 17.6x
+
+================================================================
+  3) Latência de 300 leituras por chave (GetItem)
+================================================================
+Leitura eventual     média   4.10 ms | p50   3.90 | p90   5.00 | p99   9.80 ms
+Leitura forte        média   4.40 ms | p50   4.20 | p90   5.30 | p99  10.50 ms
+
+================================================================
+  4) Buscar as leituras de UM sensor: Query x Scan
+================================================================
+QUERY  → retornou  100 | leu   100 itens |    1.0 RCU |     8.0 ms
+SCAN   → retornou  100 | leu  2000 itens |   20.0 RCU |   120.0 ms</pre></div>
+  <p class="cap">Valores ilustrativos — use os da sua execução na narração.</p>
+
+  <h3>4.3 Como interpretar (para a narração)</h3>
+  <ul>
+    <li><b>Sequencial × paralela:</b> uma requisição por vez desperdiça tempo esperando a rede. Com várias threads e lotes, muitas requisições ficam em voo ao mesmo tempo e o DynamoDB as atende em paralelo, em partições diferentes. É a mesma ideia de paralelismo da disciplina.</li>
+    <li><b>Latência:</b> o tempo medido inclui a ida e volta pela rede dentro da região. O importante é o <b>p99 continuar baixo</b>: “latência previsível”.</li>
+    <li><b>Eventual × forte:</b> a diferença costuma ser pequena; a leitura forte custa o dobro de capacidade porque precisa do líder.</li>
+    <li><b>Query × Scan:</b> a Query vai direto na partição da chave; o Scan lê a tabela inteira e só depois filtra. Mesmo resultado, ~20× mais capacidade consumida. Em uma tabela de terabytes a diferença seria gigantesca.</li>
+  </ul>
+  <div class="box info"><b>Rode duas ou três vezes</b> antes de gravar. Na segunda execução a tabela já existe e o script a reaproveita (os itens são sobrescritos, não duplicados). Se quiser filmar a criação da tabela, apague antes com <code>python3 demo_dynamodb.py --apagar</code>.</div>
+
+  <!-- 5 -->
+  <h2><span class="n">5</span>Parte C — Métricas</h2>
+  <ol>
+    <li>Volte ao DynamoDB → <b class="ui">Tables</b> → <b>LeiturasSensores</b> → aba <b class="ui">Monitor</b>.</li>
+    <li>Mostre os gráficos de capacidade de leitura/escrita consumida e de latência. Os pontos aparecem com 1 a 5 minutos de atraso — então grave esta parte <b>alguns minutos depois</b> de rodar o script.</li>
+  </ol>
+
+  <!-- 6 -->
+  <h2><span class="n">6</span>Gravar o vídeo</h2>
+  <h3>Roteiro do vídeo (~3min30)</h3>
+  <table>
+    <tr><th>Tempo</th><th>Cena</th></tr>
+    <tr><td>0:00–0:35</td><td>Console DynamoDB → Create table <code>Music</code> → Active</td></tr>
+    <tr><td>0:35–1:10</td><td>Create item (2 itens bastam no vídeo; os outros podem estar prontos) → mostrar a lista com atributos diferentes</td></tr>
+    <tr><td>1:10–1:40</td><td>Query por <code>Acme Band</code> → PartiQL <code>SELECT</code></td></tr>
+    <tr><td>1:40–2:50</td><td>CloudShell → <code>python3 demo_dynamodb.py</code> → deixar a saída parada alguns segundos em cada bloco</td></tr>
+    <tr><td>2:50–3:15</td><td>Aba Monitor com os gráficos</td></tr>
+    <tr><td>3:15–3:30</td><td>Delete table (mostrar a confirmação)</td></tr>
+  </table>
+
+  <h3>Como gravar no Windows</h3>
+  <ul>
+    <li><b>Ferramenta de Captura (Snipping Tool):</b> <code>Win + Shift + R</code> → selecione a área do navegador → <b class="ui">Iniciar</b>. Salva em MP4.</li>
+    <li><b>Xbox Game Bar:</b> com o navegador em foco, <code>Win + Alt + R</code> inicia/para a gravação. O arquivo fica em <code>Vídeos\Capturas</code>.</li>
+    <li><b>OBS Studio</b> (gratuito) se quiser mais controle.</li>
+  </ul>
+  <h3>Dicas para ficar legível no projetor</h3>
+  <ul>
+    <li>Aumente o zoom do navegador para <b>125–150%</b> (<code>Ctrl +</code>). No CloudShell, aumente a fonte em <b class="ui">⚙ Preferences</b> → <b>Font size: Large</b>.</li>
+    <li>Use o tema claro do console e feche abas e notificações.</li>
+    <li>Edite no <b>Clipchamp</b> (já vem no Windows 11): corte as esperas, acelere trechos lentos (1,5–2×) e dê zoom na saída do script.</li>
+    <li>Grave <b>sem áudio</b> e narre ao vivo usando o <a href="roteiro.html#s16">roteiro do slide 16</a>.</li>
+  </ul>
+  <div class="box ok"><b>Onde salvar:</b> exporte em MP4 (1080p) com o nome <code>demo.mp4</code> dentro da pasta <code>video</code> do projeto. O slide 16 carrega o vídeo automaticamente de <code>video/demo.mp4</code>.</div>
+  <div class="box warn"><b>Não mostre no vídeo</b> número da conta, e-mail ou página de faturamento. Se aparecer, corte ou desfoque na edição.</div>
+
+  <!-- 7 -->
+  <h2><span class="n">7</span>Limpeza (não pule)</h2>
+  <ol>
+    <li>No CloudShell: <code>python3 demo_dynamodb.py --apagar</code></li>
+    <li>No console: <b class="ui">Tables</b> → marque <b>Music</b> → <b class="ui">Delete</b> → digite <code>confirm</code>.</li>
+    <li>Confira em <b class="ui">Billing and Cost Management</b> que o custo está em US$ 0,00.</li>
+  </ol>
+  <div class="box info">O custo real de tudo isso é ínfimo: no on-demand, um milhão de escritas custa cerca de US$ 0,63 (us-east-1) e a demonstração faz poucos milhares. Mesmo assim, apagar as tabelas é boa prática.</div>
+
+  <!-- 8 -->
+  <h2><span class="n">8</span>Se algo der errado</h2>
+  <table>
+    <tr><th>Sintoma</th><th>Causa provável / solução</th></tr>
+    <tr><td><code>AccessDeniedException</code></td><td>Usuário sem permissão de DynamoDB. Use a conta raiz/administrador, ou no AWS Academy confira se o lab está iniciado.</td></tr>
+    <tr><td><code>ModuleNotFoundError: boto3</code></td><td>Rode <code>pip3 install --user boto3</code> no CloudShell e tente de novo.</td></tr>
+    <tr><td>Tabela não aparece no console</td><td>Região diferente no seletor (canto superior direito).</td></tr>
+    <tr><td>Ganho do paralelismo pequeno</td><td>Normal variar. Rode de novo; a primeira execução logo após criar a tabela pode ser mais lenta.</td></tr>
+    <tr><td>Gráficos do Monitor vazios</td><td>As métricas demoram alguns minutos. Espere e atualize.</td></tr>
+    <tr><td>Vídeo não aparece no slide 16</td><td>Confira o nome exato <code>video/demo.mp4</code> e que <code>slides.html</code> está na mesma pasta que a pasta <code>video</code>.</td></tr>
+  </table>
+
+  <h2>Checklist do dia</h2>
+  <ul class="check">
+    <li>Pasta inteira copiada (slides.html + img/ + video/) — não só o .html</li>
+    <li>Vídeo tocando no slide 16 no computador da sala</li>
+    <li>Navegador em tela cheia (<code>F</code>) e testado com o passador de slides</li>
+    <li>Roteiro aberto no celular ou impresso</li>
+    <li>Tabelas apagadas na AWS</li>
+  </ul>
+
+  <h3>Referências usadas neste guia</h3>
+  <ul>
+    <li><a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/getting-started-step-1.html">AWS — Getting started with DynamoDB (passos 1 a 5)</a></li>
+    <li><a href="https://docs.aws.amazon.com/cloudshell/latest/userguide/welcome.html">AWS — What is AWS CloudShell?</a></li>
+    <li><a href="https://aws.amazon.com/free/">AWS — Free Tier</a> · <a href="https://aws.amazon.com/dynamodb/pricing/on-demand/">DynamoDB on-demand pricing</a></li>
+    <li><a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/bp-partition-key-design.html">AWS — Best practices for partition keys</a></li>
+  </ul>
+</main>
+<script>
+  document.querySelectorAll('.codeblock button').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const text = btn.nextElementSibling.innerText;
+      try { await navigator.clipboard.writeText(text); btn.textContent = 'Copiado!'; }
+      catch { btn.textContent = 'Selecione e copie'; }
+      setTimeout(() => btn.textContent = 'Copiar', 1500);
+    });
+  });
+</script>
+</body>
+</html>

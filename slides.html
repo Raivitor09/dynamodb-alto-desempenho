@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Amazon DynamoDB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --ink: #14181f;
+    --muted: #5d6878;
+    --line: #e2e7ef;
+    --soft: #f2f6fc;
+    --accent: #1f5fbf;
+    --accent-soft: #e4edfb;
+    --aws: #ff9900;
+    --ok: #1d8a4e;
+    --no: #c2362f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #dfe3ea; overflow: hidden; }
+  body { font-family: "Inter", "Segoe UI", system-ui, sans-serif; color: var(--ink); }
+
+  /* palco 1920x1080 escalado para caber na tela */
+  .slide {
+    position: absolute; top: 50%; left: 50%;
+    width: 1920px; height: 1080px;
+    margin: -540px 0 0 -960px;
+    background: var(--bg);
+    padding: 110px 150px 100px;
+    display: none; flex-direction: column;
+    transform-origin: center center;
+    box-shadow: 0 10px 50px rgba(0,0,0,.12);
+  }
+  .slide.active { display: flex; }
+  .slide::after {
+    content: attr(data-n);
+    position: absolute; right: 70px; bottom: 50px;
+    font-size: 26px; color: #a3acb9; font-weight: 500;
+  }
+  .slide::before {
+    content: ""; position: absolute; left: 150px; top: 72px;
+    width: 90px; height: 8px; border-radius: 4px; background: var(--aws);
+  }
+  .slide.no-deco::before, .slide.no-deco::after { display: none; }
+
+  h1 { font-size: 132px; font-weight: 800; letter-spacing: -3px; line-height: 1; }
+  h2 { font-size: 84px; font-weight: 800; letter-spacing: -1.5px; line-height: 1.05; margin-bottom: 56px; }
+  .lead { font-size: 54px; line-height: 1.3; color: var(--ink); }
+  .muted { color: var(--muted); }
+  .accent { color: var(--accent); }
+  .caption { font-size: 30px; color: var(--muted); margin-top: 28px; }
+  .source { position: absolute; left: 150px; bottom: 50px; font-size: 24px; color: #8c96a5; }
+  .grow { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
+  .fig { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 18px; }
+  .fig.framed { border: 2px solid var(--line); padding: 24px; background: #fff; }
+  code, .mono { font-family: "JetBrains Mono", Consolas, monospace; }
+
+  /* capa */
+  .cover { justify-content: center; padding-left: 170px; }
+  .cover .logo { height: 250px; margin-bottom: 60px; align-self: flex-start; }
+  .cover h1 span { color: var(--accent); }
+  .cover .sub { font-size: 50px; color: var(--muted); margin-top: 30px; }
+  .cover .who { margin-top: 90px; font-size: 44px; font-weight: 700; }
+  .cover .course { font-size: 34px; color: var(--muted); margin-top: 12px; }
+  .cover .bar { position: absolute; right: 0; top: 0; bottom: 0; width: 38px;
+    background: linear-gradient(var(--accent), var(--accent) 70%, var(--aws) 70%); }
+
+  /* pergunta */
+  .question { justify-content: center; }
+  .question .big { font-size: 104px; font-weight: 800; line-height: 1.12; letter-spacing: -2px; }
+  .question .big em { font-style: normal; color: var(--accent); }
+
+  /* cards */
+  .cards { display: grid; gap: 40px; flex: 1; align-content: center; }
+  .cards.c2 { grid-template-columns: 1fr 1fr; }
+  .card { background: var(--soft); border-radius: 28px; padding: 56px 60px; }
+  .card h3 { font-size: 60px; font-weight: 800; margin-bottom: 22px; }
+  .card p { font-size: 42px; line-height: 1.35; color: var(--muted); }
+  .card .tag { display: inline-block; font-size: 28px; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); padding: 8px 20px; border-radius: 999px; margin-bottom: 28px; }
+  .card.hl { background: var(--accent); }
+  .card.hl h3, .card.hl p { color: #fff; }
+  .card.hl .tag { background: rgba(255,255,255,.18); color: #fff; }
+
+  .pills { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; flex: 1; align-content: center; }
+  .pill { font-size: 58px; font-weight: 700; padding: 54px 56px; border-radius: 28px;
+    background: var(--soft); display: flex; align-items: center; gap: 30px; }
+  .pill .dot { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); flex: none; align-self: flex-start; margin-top: 24px; }
+  .pill small { display: block; font-size: 34px; font-weight: 500; color: var(--muted); margin-top: 6px; }
+
+  /* números grandes */
+  .stat { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  .stat .num { font-size: 230px; font-weight: 800; letter-spacing: -8px; line-height: .95; color: var(--accent); }
+  .stat .unit { font-size: 64px; font-weight: 700; margin-top: 18px; }
+  .stat .row { display: flex; gap: 80px; margin-top: 80px; }
+  .stat .row div { font-size: 44px; color: var(--muted); }
+  .stat .row b { display: block; font-size: 64px; color: var(--ink); }
+
+  .formula { margin-top: 40px; font-size: 36px; color: var(--muted); text-align: center; }
+  .formula b { color: var(--ink); }
+
+  /* quando usar */
+  .uses { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; flex: 1; align-content: center; }
+  .uses h3 { font-size: 52px; margin-bottom: 36px; }
+  .uses li { list-style: none; font-size: 46px; line-height: 1.3; margin-bottom: 30px; padding-left: 70px; position: relative; }
+  .uses li::before { position: absolute; left: 0; top: 0; font-weight: 800; }
+  .uses .yes h3 { color: var(--ok); }  .uses .yes li::before { content: "✓"; color: var(--ok); }
+  .uses .no h3 { color: var(--no); }   .uses .no li::before { content: "✕"; color: var(--no); }
+
+  /* vídeo */
+  .video-wrap { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
+  .video-wrap video { width: 100%; height: 100%; object-fit: contain; border-radius: 18px; background: #000; }
+  .video-missing { display: none; width: 100%; height: 100%; border: 4px dashed var(--line); border-radius: 28px;
+    align-items: center; justify-content: center; flex-direction: column; gap: 20px; color: var(--muted); font-size: 40px; text-align: center; }
+  .video-missing code { font-size: 34px; color: var(--accent); }
+
+  /* referências */
+  .refs { columns: 1; font-size: 25px; line-height: 1.35; color: var(--ink); counter-reset: r; }
+  .refs li { list-style: none; margin-bottom: 14px; padding-left: 66px; position: relative; break-inside: avoid; }
+  .refs li::before { counter-increment: r; content: "[" counter(r) "]"; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+  .refs a { color: var(--muted); text-decoration: none; word-break: break-all; }
+
+  /* obrigado */
+  .thanks { justify-content: center; align-items: center; text-align: center; }
+  .thanks h1 { font-size: 170px; color: var(--accent); }
+  .thanks .q { font-size: 64px; margin-top: 30px; color: var(--muted); }
+  .thanks .who { font-size: 40px; font-weight: 700; margin-top: 90px; }
+  .thanks .logo { height: 150px; margin-top: 50px; }
+
+  /* barra de progresso + dica */
+  #progress { position: fixed; left: 0; bottom: 0; height: 6px; background: var(--aws); transition: width .25s; z-index: 10; }
+  #hint { position: fixed; right: 16px; top: 12px; font-size: 13px; color: #6b7480; opacity: .75; z-index: 10;
+    font-family: "Segoe UI", sans-serif; transition: opacity .6s; }
+</style>
+</head>
+<body>
+
+<!-- 1 · CAPA -->
+<section class="slide cover no-deco" data-n="1">
+  <div class="bar"></div>
+  <img class="logo" src="img/uepb_logo.svg" alt="Logotipo da Universidade Estadual da Paraíba">
+  <h1>Amazon <span>DynamoDB</span></h1>
+  <p class="sub">Banco de dados NoSQL de alto desempenho na AWS</p>
+  <p class="who">Vítor Raimundo Fernandes Gabínio</p>
+  <p class="course">Computação de Alto Desempenho · UEPB · 2026</p>
+</section>
+
+<!-- 2 · PERGUNTA -->
+<section class="slide question" data-n="2">
+  <p class="big">Milhões de requisições<br>por segundo.<br><em>Respostas em milissegundos.</em></p>
+  <p class="lead muted" style="margin-top:60px">Como?</p>
+</section>
+
+<!-- 3 · ORIGEM -->
+<section class="slide" data-n="3">
+  <h2>De onde veio</h2>
+  <div class="grow"><img class="fig" src="img/paper_timeline.png" alt="Linha do tempo do DynamoDB de 2007 a 2021"></div>
+  <p class="caption">2007: artigo <b>Dynamo</b> (uso interno da Amazon) → 2012: <b>DynamoDB</b>, serviço público</p>
+  <p class="source">Fonte: Elhemali et al., USENIX ATC 2022 (autores da AWS)</p>
+</section>
+
+<!-- 4 · O QUE É -->
+<section class="slide" data-n="4">
+  <h2>O que é</h2>
+  <div class="pills">
+    <div class="pill"><span class="dot"></span><div>NoSQL<small>chave‑valor e documentos</small></div></div>
+    <div class="pill"><span class="dot"></span><div>Serverless<small>sem servidores para gerenciar</small></div></div>
+    <div class="pill"><span class="dot"></span><div>Escala horizontal<small>de 1 a milhões de req/s</small></div></div>
+    <div class="pill"><span class="dot"></span><div>Latência previsível<small>milissegundos em qualquer escala</small></div></div>
+  </div>
+</section>
+
+<!-- 5 · MODELO DE DADOS -->
+<section class="slide" data-n="5">
+  <h2>Tabela · Item · Atributo</h2>
+  <div class="grow"><img class="fig framed" src="img/HowItWorksTables-2024.png" alt="Tabela People com itens e atributos"></div>
+  <p class="caption">Sem esquema fixo: cada item pode ter atributos diferentes — só a chave é obrigatória</p>
+  <p class="source">Fonte: AWS — DynamoDB Developer Guide, “Core components”</p>
+</section>
+
+<!-- 6 · CHAVE PRIMÁRIA -->
+<section class="slide" data-n="6">
+  <h2>A chave é tudo</h2>
+  <div class="cards c2">
+    <div class="card hl">
+      <span class="tag">partition key</span>
+      <h3>Onde o item mora</h3>
+      <p>Passa por uma função hash e escolhe a partição</p>
+    </div>
+    <div class="card">
+      <span class="tag">sort key · opcional</span>
+      <h3>Em que ordem</h3>
+      <p>Ordena os itens dentro da partição e permite buscas por intervalo</p>
+    </div>
+  </div>
+  <p class="formula">Ex.: <b class="mono">Artista</b> + <b class="mono">Música</b> &nbsp;·&nbsp; <b class="mono">sensor_id</b> + <b class="mono">timestamp</b></p>
+</section>
+
+<!-- 7 · PARTICIONAMENTO -->
+<section class="slide" data-n="7">
+  <h2>Particionamento por hash</h2>
+  <div class="grow"><img class="fig" src="img/HowItWorksPartitionKey.png" alt="Função hash distribuindo itens entre partições"></div>
+  <p class="caption">Dados espalhados em muitas partições = <b class="accent">trabalho em paralelo</b></p>
+  <p class="source">Fonte: AWS — DynamoDB Developer Guide, “Partitions and data distribution”</p>
+</section>
+
+<!-- 8 · ARQUITETURA -->
+<section class="slide" data-n="8">
+  <h2>Por dentro</h2>
+  <div class="grow"><img class="fig" src="img/paper_arquitetura.png" alt="Arquitetura: roteador de requisições, autenticação, metadados, controle de admissão e nós de armazenamento em zonas"></div>
+  <p class="caption">Roteador de requisições → nós de armazenamento (SSD) em zonas de disponibilidade diferentes</p>
+  <p class="source">Fonte: Elhemali et al., USENIX ATC 2022</p>
+</section>
+
+<!-- 9 · REPLICAÇÃO -->
+<section class="slide" data-n="9">
+  <h2>Cada partição tem 3 cópias</h2>
+  <div class="grow">
+    <svg viewBox="0 0 1600 560" width="1560" role="img" aria-label="Escrita chega ao líder, que replica o log para duas réplicas em outras zonas; confirma com quórum">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#14181f"/>
+        </marker>
+      </defs>
+      <g font-family="Inter, Segoe UI, sans-serif">
+        <!-- cliente -->
+        <rect x="20" y="215" width="250" height="130" rx="22" fill="#f2f6fc"/>
+        <text x="145" y="295" text-anchor="middle" font-size="42" font-weight="700" fill="#14181f">Escrita</text>
+        <line x1="275" y1="280" x2="530" y2="280" stroke="#14181f" stroke-width="6" marker-end="url(#arr)"/>
+        <!-- líder -->
+        <rect x="540" y="170" width="420" height="220" rx="26" fill="#1f5fbf"/>
+        <text x="750" y="262" text-anchor="middle" font-size="50" font-weight="800" fill="#fff">Líder</text>
+        <text x="750" y="322" text-anchor="middle" font-size="34" fill="#dbe7fb">Zona A</text>
+        <!-- réplicas -->
+        <rect x="1180" y="20" width="400" height="190" rx="26" fill="#e4edfb"/>
+        <text x="1380" y="105" text-anchor="middle" font-size="46" font-weight="700" fill="#14181f">Réplica</text>
+        <text x="1380" y="160" text-anchor="middle" font-size="32" fill="#5d6878">Zona B</text>
+        <rect x="1180" y="350" width="400" height="190" rx="26" fill="#e4edfb"/>
+        <text x="1380" y="435" text-anchor="middle" font-size="46" font-weight="700" fill="#14181f">Réplica</text>
+        <text x="1380" y="490" text-anchor="middle" font-size="32" fill="#5d6878">Zona C</text>
+        <line x1="965" y1="230" x2="1170" y2="130" stroke="#14181f" stroke-width="6" marker-end="url(#arr)"/>
+        <line x1="965" y1="330" x2="1170" y2="430" stroke="#14181f" stroke-width="6" marker-end="url(#arr)"/>
+        <text x="1075" y="280" text-anchor="middle" font-size="30" font-weight="700" fill="#5d6878">log</text>
+      </g>
+    </svg>
+  </div>
+  <p class="formula"><b>Multi‑Paxos</b> elege o líder &nbsp;·&nbsp; escrita confirmada quando <b>2 de 3</b> gravam o log</p>
+  <p class="source">Fonte: Elhemali et al., USENIX ATC 2022</p>
+</section>
+
+<!-- 10 · CONSISTÊNCIA -->
+<section class="slide" data-n="10">
+  <h2>Leitura: você escolhe</h2>
+  <div class="cards c2">
+    <div class="card">
+      <span class="tag">padrão</span>
+      <h3>Eventual</h3>
+      <p>Qualquer réplica responde<br>Metade do custo</p>
+    </div>
+    <div class="card hl">
+      <span class="tag">ConsistentRead = true</span>
+      <h3>Forte</h3>
+      <p>Só o líder responde<br>Sempre o dado mais recente</p>
+    </div>
+  </div>
+</section>
+
+<!-- 11 · CAPACIDADE -->
+<section class="slide" data-n="11">
+  <h2>Capacidade</h2>
+  <div class="cards c2">
+    <div class="card hl">
+      <span class="tag">padrão e recomendado</span>
+      <h3>On‑demand</h3>
+      <p>Paga por requisição<br>Escala sozinho</p>
+    </div>
+    <div class="card">
+      <span class="tag">tráfego previsível</span>
+      <h3>Provisionado</h3>
+      <p>Você define leituras e escritas por segundo<br>Custo previsível</p>
+    </div>
+  </div>
+  <p class="formula"><b>1 RCU</b> = 1 leitura forte/s de até 4 KB &nbsp;·&nbsp; <b>1 WCU</b> = 1 escrita/s de até 1 KB</p>
+</section>
+
+<!-- 12 · DAX -->
+<section class="slide" data-n="12">
+  <h2>DAX: cache em memória</h2>
+  <div class="grow"><img class="fig" src="img/dax_high_level.png" alt="Aplicação com cliente DAX, cluster DAX e DynamoDB dentro de uma VPC"></div>
+  <p class="caption">De <b>milissegundos</b> para <b class="accent">microssegundos</b> — até 10× mais rápido em leituras</p>
+  <p class="source">Fonte: AWS — “DAX: How it works” e página do Amazon DynamoDB Accelerator</p>
+</section>
+
+<!-- 13 · GLOBAL TABLES -->
+<section class="slide" data-n="13">
+  <h2>Global Tables</h2>
+  <div class="stat">
+    <div class="num">99,999%</div>
+    <div class="unit">de disponibilidade</div>
+    <div class="row">
+      <div><b>Multi‑região</b>réplicas em várias regiões</div>
+      <div><b>Multi‑ativo</b>todas aceitam escrita</div>
+    </div>
+  </div>
+  <p class="source">Fonte: AWS — “Global tables” e página do Amazon DynamoDB</p>
+</section>
+
+<!-- 14 · PRIME DAY -->
+<section class="slide" data-n="14">
+  <h2>Prime Day 2025</h2>
+  <div class="stat">
+    <div class="num">151 milhões</div>
+    <div class="unit">de requisições por segundo (pico)</div>
+    <div class="row">
+      <div><b>Dezenas de trilhões</b>de chamadas no evento</div>
+      <div><b>Milissegundos</b>de latência</div>
+    </div>
+  </div>
+  <p class="source">Fonte: AWS News Blog, 26/08/2025</p>
+</section>
+
+<!-- 15 · QUANDO USAR -->
+<section class="slide" data-n="15">
+  <h2>Quando usar?</h2>
+  <div class="uses">
+    <div class="yes">
+      <h3>Bom para</h3>
+      <ul>
+        <li>Acesso por chave conhecida</li>
+        <li>Tráfego enorme ou imprevisível</li>
+        <li>Jogos, IoT, carrinhos, sessões</li>
+      </ul>
+    </div>
+    <div class="no">
+      <h3>Não é ideal para</h3>
+      <ul>
+        <li>JOINs e consultas livres</li>
+        <li>Relatórios analíticos pesados</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 16 · DEMONSTRAÇÃO -->
+<section class="slide" data-n="16">
+  <h2>Demonstração</h2>
+  <div class="video-wrap">
+    <video id="demo-video" src="video/demo.mp4" controls preload="metadata"></video>
+    <div class="video-missing" id="video-missing">
+      <div>Vídeo não encontrado</div>
+      <code>salve a gravação em video/demo.mp4</code>
+    </div>
+  </div>
+</section>
+
+<!-- 17 · REFERÊNCIAS -->
+<section class="slide" data-n="17">
+  <h2 style="margin-bottom:40px">Referências</h2>
+  <ol class="refs">
+    <li>AMAZON WEB SERVICES. <b>Amazon DynamoDB</b>. <a href="https://aws.amazon.com/dynamodb/">aws.amazon.com/dynamodb</a></li>
+    <li>AWS. <b>Core components of Amazon DynamoDB</b>. Developer Guide. <a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.CoreComponents.html">docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.CoreComponents.html</a></li>
+    <li>AWS. <b>Partitions and data distribution in DynamoDB</b>. <a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.Partitions.html">docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.Partitions.html</a></li>
+    <li>AWS. <b>DynamoDB throughput capacity</b>. <a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/capacity-mode.html">docs.aws.amazon.com/amazondynamodb/latest/developerguide/capacity-mode.html</a></li>
+    <li>AWS. <b>DAX: How it works</b>. <a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.concepts.html">docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.concepts.html</a> · <a href="https://aws.amazon.com/dynamodb/dax/">aws.amazon.com/dynamodb/dax</a></li>
+    <li>AWS. <b>Global tables</b>. <a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GlobalTables.html">docs.aws.amazon.com/amazondynamodb/latest/developerguide/GlobalTables.html</a></li>
+    <li>AWS. <b>Getting started with DynamoDB</b>. <a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/getting-started-step-1.html">docs.aws.amazon.com/amazondynamodb/latest/developerguide/getting-started-step-1.html</a></li>
+    <li>YUN, C. <b>AWS services scale to new heights for Prime Day 2025</b>. AWS News Blog, 26 ago. 2025. <a href="https://aws.amazon.com/blogs/aws/aws-services-scale-to-new-heights-for-prime-day-2025-key-metrics-and-milestones/">aws.amazon.com/blogs/aws/aws-services-scale-to-new-heights-for-prime-day-2025-key-metrics-and-milestones</a></li>
+    <li>ELHEMALI, M. et al. <b>Amazon DynamoDB: A Scalable, Predictably Performant, and Fully Managed NoSQL Database Service</b>. USENIX ATC, 2022. <a href="https://www.usenix.org/conference/atc22/presentation/vig">usenix.org/conference/atc22/presentation/vig</a></li>
+    <li>DECANDIA, G. et al. <b>Dynamo: Amazon’s Highly Available Key-value Store</b>. SOSP, 2007. <a href="https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf">allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf</a></li>
+    <li>AWS. <b>Amazon DynamoDB pricing (on-demand)</b>. <a href="https://aws.amazon.com/dynamodb/pricing/on-demand/">aws.amazon.com/dynamodb/pricing/on-demand</a></li>
+  </ol>
+</section>
+
+<!-- 18 · OBRIGADO -->
+<section class="slide thanks no-deco" data-n="18">
+  <h1>Obrigado!</h1>
+  <p class="q">Perguntas?</p>
+  <p class="who">Vítor Raimundo Fernandes Gabínio</p>
+  <img class="logo" src="img/uepb_logo.svg" alt="Logotipo da UEPB">
+</section>
+
+<div id="progress"></div>
+<div id="hint">← → navegar · F tela cheia</div>
+
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  const progress = document.getElementById('progress');
+  const video = document.getElementById('demo-video');
+  let i = 0;
+
+  function fit() {
+    const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+    slides.forEach(el => el.style.transform = `scale(${s})`);
+  }
+
+  function show(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((el, k) => el.classList.toggle('active', k === i));
+    progress.style.width = ((i + 1) / slides.length * 100) + '%';
+    if (!slides[i].contains(video)) video.pause();
+    history.replaceState(null, '', '#' + (i + 1));
+  }
+
+  function videoMissing() {
+    video.style.display = 'none';
+    document.getElementById('video-missing').style.display = 'flex';
+  }
+  video.addEventListener('error', videoMissing);
+  if (video.error) videoMissing();
+
+  addEventListener('keydown', e => {
+    const k = e.key;
+    if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(k)) {
+      if (k === ' ' && slides[i].contains(video) && video.style.display !== 'none') {
+        e.preventDefault(); video.paused ? video.play() : video.pause(); return;
+      }
+      e.preventDefault(); show(i + 1);
+    } else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(k)) {
+      e.preventDefault(); show(i - 1);
+    } else if (k === 'Home') { show(0); }
+    else if (k === 'End') { show(slides.length - 1); }
+    else if (k === 'f' || k === 'F') {
+      document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+    }
+  }, true);
+
+  addEventListener('resize', fit);
+  setTimeout(() => document.getElementById('hint').style.opacity = 0, 4000);
+
+  fit();
+  show((parseInt(location.hash.slice(1)) || 1) - 1);
+</script>
+</body>
+</html>
